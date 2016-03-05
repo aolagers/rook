@@ -41,6 +41,54 @@ impl BitBoard {
     pub fn se(&self) -> Self {
         BitBoard((self.0 & ! COL_H) >> 7)
     }
+    pub fn largets_bit(&self) -> usize {
+        let mut cnt = 0;
+        let mut div = self.0;
+        while div != 0  {
+            div >>= 1;
+            cnt += 1;
+        }
+        cnt
+    }
+    pub fn count_bits(&self) -> usize {
+        let mut cnt = 0;
+        let mut rest = self.0;
+        while rest != 0 {
+            cnt += 1;
+            rest = rest & rest - 1;
+        }
+        /*
+        for i in 0 .. 64 {
+            if self.0 & (1 << i) != 0 {
+                cnt += 1;
+            }
+        }*/
+
+        cnt
+    }
+    pub fn to_str(&self) -> String {
+        debug_assert!(self.count_bits() == 1);
+        let lb = self.largets_bit() - 1;
+        let r = lb / 8;
+        let c = lb % 8;
+        debug_assert!(r <= 7);
+        debug_assert!(c <= 7);
+
+        let mut s = String::new();
+        s.push(('a' as u8 + c as u8) as char);
+        s.push(('1' as u8 + r as u8) as char);
+        s
+    }
+    pub fn from_str(s: &str) -> BitBoard {
+        let mut it = s.chars();
+        let cc = it.next().unwrap();
+        let rc = it.next().unwrap();
+        let c = cc as u8 - 'a' as u8;
+        let r = rc as u8 - '1' as u8;
+        debug_assert!(r <= 7);
+        debug_assert!(c <= 7);
+        BitBoard(1 << (r*8 + c))
+    }
 }
 impl BitOr for BitBoard {
     type Output = BitBoard;

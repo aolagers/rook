@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 #![allow(unused_must_use)]
+extern crate rand;
 
 mod bitboard;
 mod eval;
@@ -14,6 +15,7 @@ use types::PieceType::*;
 
 //use Piece::*;
 
+use rand::Rng;
 use std::fmt;
 
 /*
@@ -76,7 +78,8 @@ pub struct BBoard {
     pieces: [BitBoard; 12],
     whites: BitBoard,
     blacks: BitBoard,
-    occupied: BitBoard
+    occupied: BitBoard,
+    free: BitBoard
 }
 impl BBoard {
     fn empty() -> Self {
@@ -84,38 +87,42 @@ impl BBoard {
             pieces: [BitBoard(0); 12],
             whites: BitBoard(0),
             blacks: BitBoard(0),
-            occupied: BitBoard(0)
+            occupied: BitBoard(0),
+            free: BitBoard(0xffff_ffff_ffff_ffff)
         }
     }
 
-    fn clear(&mut self, sq: Square) {
+    fn clear(&mut self, sq: BitBoard) {
+        debug_assert!(sq.count_bits() == 1);
         for bb in self.pieces.iter_mut() {
-            bb.0 = bb.0 & !(1 << sq.0);
+            bb.0 = bb.0 & !sq.0;
         }
 
         self.recalc();
     }
 
-    fn set(&mut self, sq: Square, p: Pc) {
+    fn set(&mut self, sq: BitBoard, p: Pc) {
+        debug_assert!(sq.count_bits() == 1);
         // println!("sq {}", sq.0);
         // println!("sq {}", sq.to_str());
+
         self.clear(sq);
         let Pc(c, k) = p;
         let idx = c as usize + k as usize;
-        self.pieces[idx] = self.pieces[idx] | BitBoard(1 << sq.0);
+        self.pieces[idx] = self.pieces[idx] | sq;
         // println!("{:?}", self.pieces[p.color as usize + p.kind as usize]);
         self.recalc();
     }
 
-    fn get(&self, sq: Square) -> Option<Pc> {
+    fn get(&self, sq: BitBoard) -> Option<Pc> {
         let mut found = None;
         for (idx, bb) in self.pieces.iter().enumerate() {
-            if (*bb & BitBoard(1 << sq.0)).is_not_empty() {
+            if (*bb & sq).is_not_empty() {
                 let color = if idx / 6 == 0 { White } else { Black };
                 let kind = match idx % 6 {
                     0 => Pawn,
-                    1 => Bishop,
-                    2 => Knight,
+                    1 => Knight,
+                    2 => Bishop,
                     3 => Rook,
                     4 => Queen,
                     5 => King,
@@ -129,38 +136,60 @@ impl BBoard {
         return found;
     }
 
+    pub fn get_squares(&self, piece: Pc) -> Vec<BitBoard> {
+        let mut locations = Vec::new();
+        let Pc(c, t) = piece;
+        let arr = self.pieces[c as usize + t as usize];
+
+        for i in 0..64 {
+            let sqbb = BitBoard(1 << i);
+            if (arr & sqbb).is_not_empty() {
+                locations.push(sqbb);
+            }
+        }
+        locations
+    }
+
+    pub fn mine(&self, color: Color) -> BitBoard {
+        match color {
+            White => self.whites,
+            Black => self.blacks
+        }
+    }
+
+    pub fn theirs(&self, color: Color) -> BitBoard {
+        match color {
+            White => self.blacks,
+            Black => self.whites
+        }
+    }
+
     fn recalc(&mut self) {
         self.whites = BitBoard(0);
         self.blacks = BitBoard(0);
         for i in 0..6  { self.whites = self.whites | self.pieces[i]; }
-        for i in 6..12 { self.blacks = self.whites | self.pieces[i]; }
+        for i in 6..12 { self.blacks = self.blacks | self.pieces[i]; }
         self.occupied = self.whites | self.blacks;
+        self.free = !self.occupied;
     }
 }
+
 impl fmt::Display for BBoard {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut s = String::new();
-        // write!(f, "BBoard {{\n      ");
-        // for i in 0..8 { write!(f, "{} ", (i + 'A' as u8) as char); }
         write!(f, "\n    ");
         for i in 0..8 {
             write!(f, "{} ", (7-i)+1);
             for j in 0..8 {
-
-                match self.get(Square((7-i)*8 + j)) {
+                match self.get(BitBoard(1 << ((7-i)*8 + j))) {
                     None => write!(f, ". "),
                     Some(p) => p.fmt(f)
                 };
-
-
-                // .fmt(f);
-                // write!(f, "{}");
             }
             write!(f, "\n    ");
         }
         write!(f, "  ");
         for i in 0..8 { write!(f, "{} ", (i + 'A' as u8) as char); }
-        write!(f, "{}", s)
+        Ok(())
     }
 }
 
@@ -187,8 +216,10 @@ impl Pos {
     }
 
     fn test() -> Self {
-        Pos::from_fen("1n4n1/pppppppp/8/8/8/8/PPPPPPPP/1N4N1 w KQkq - 0 1")
+        //Pos::from_fen("1n4n1/pppppppp/8/8/8/8/PPPPPPPP/1N4N1 w KQkq - 0 1")
+        Pos::from_fen("8/bbb2bbb/8/8/8/8/BBBB4/8 w KQkq - 0 1")
     }
+
 
     fn from_fen(s: &str) -> Self {
         let mut pos = Pos::empty();
@@ -204,21 +235,21 @@ impl Pos {
         let mut col = 0;
         for c in board.chars() {
             let idx = row * 8 + col;
-            let sq = Square(idx);
+            let sq = if col < 8 { BitBoard(1 << idx) } else {BitBoard(0)};
             col += 1;
             match c {
-                'p' => { pos.board.set(sq, Pc(Black, Pawn)); },
                 'P' => { pos.board.set(sq, Pc(White, Pawn)); },
-                'r' => { pos.board.set(sq, Pc(Black, Rook)); },
                 'R' => { pos.board.set(sq, Pc(White, Rook)); },
-                'n' => { pos.board.set(sq, Pc(Black, Knight)); },
                 'N' => { pos.board.set(sq, Pc(White, Knight)); },
-                'b' => { pos.board.set(sq, Pc(Black, Bishop)); },
                 'B' => { pos.board.set(sq, Pc(White, Bishop)); },
-                'q' => { pos.board.set(sq, Pc(Black, Queen)); },
                 'Q' => { pos.board.set(sq, Pc(White, Queen)); },
-                'k' => { pos.board.set(sq, Pc(Black, King)); },
                 'K' => { pos.board.set(sq, Pc(White, King)); },
+                'p' => { pos.board.set(sq, Pc(Black, Pawn)); },
+                'r' => { pos.board.set(sq, Pc(Black, Rook)); },
+                'n' => { pos.board.set(sq, Pc(Black, Knight)); },
+                'b' => { pos.board.set(sq, Pc(Black, Bishop)); },
+                'q' => { pos.board.set(sq, Pc(Black, Queen)); },
+                'k' => { pos.board.set(sq, Pc(Black, King)); },
                 '/' => { row -= 1; col = 0; },
                 n @ '0' ... '8' => {
                     let nm = n as u8 - '0' as u8;
@@ -240,6 +271,9 @@ impl Pos {
     }
 
     fn make_move(&mut self, mv: Move) {
+        debug_assert!(mv.from.count_bits() == 1);
+        debug_assert!(mv.to.count_bits() == 1);
+
         if self.turn == Black { self.moves += 1; }
         self.halfmoves += 1;
         self.turn = self.turn.other();
@@ -484,24 +518,31 @@ impl Position {
 */
 
 fn main() {
-    let game = Pos::start();
-    println!("{}", game);
+    let mut game = Pos::start();
+    //let mut game = Pos::from_fen("8/bbbbbbbb/8/8/8/8/BBBBBBBB/8 w KQkq - 0 1");
 
-    let moves = movegenerator::generate_moves(&game);
+    for _ in 0..500 {
+        println!("{}", game);
+        let score =  eval::evaluate(&game) as f64 / 100.0;
+        println!("{}", score);
 
-    println!("moves:");
-    for m in moves {
-        println!("{}", m);
+        let moves = movegenerator::generate_moves(&game);
+        //for m in moves.iter() {            println!("{}", m);        }
+        if moves.len() == 0 {
+            println!("no more moves for {:?}!", game.turn);
+            break;
+        } else {
+            //println!("{}", moves.len());
+        }
+
+        let rnd_move = rand::random::<usize>();
+
+        game.make_move(moves[rnd_move % moves.len()]);
+
+        std::thread::sleep_ms(100);
     }
 
     /*
-    let mv1 = Move {
-        from: Square::from_str("e2"),
-        to: Square::from_str("e4"),
-        piece: game.board.get(Square::from_str("e2")).unwrap(),
-        capture: None,
-        promotion: None
-    };
     let mv2 = Move {
         from: Square::from_str("d7"),
         to: Square::from_str("d5"),

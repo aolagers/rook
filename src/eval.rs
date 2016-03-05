@@ -1,6 +1,8 @@
 use types::PieceType;
 use types::PieceType::*;
 use types::Pc;
+use ::Pos;
+use bitboard::BitBoard;
 
 use types::Color::*;
 
@@ -68,27 +70,9 @@ const KING: [i64; 64] = [
     20, 30, 10,  0,  0, 10, 30, 20
 ];
 
-const BASE_VALUES: [i64; 6] = [
-    100,
-    310,
-    320,
-    500,
-    900,
-    20000
-];
+fn bonus(piece: Pc, i: usize) -> i64 {
+    let Pc(c, k) = piece;
 
-pub fn base_value(p: PieceType) -> i64 {
-    BASE_VALUES[p as usize]
-}
-
-pub fn bonus(i: usize, piece: Pc) -> i64 {
-
-    let idx = match piece {
-        Pc (Black, _) => i,
-        Pc (White, _) => (7-(i/8))*8 + i % 8,
-    };
-
-    let Pc(_, k) = piece;
     let lookup = match k {
         Pawn => PAWN,
         Knight => KNIGHT,
@@ -98,5 +82,51 @@ pub fn bonus(i: usize, piece: Pc) -> i64 {
         King => KING
     };
 
-    lookup[idx]
+    match c {
+        White => lookup[(7-(i/8))*8 + i % 8],
+        Black => -lookup[i]
+    }
+}
+
+const BASE_VALUES: [i64; 6] = [
+    100,
+    310,
+    320,
+    500,
+    900,
+    1_000_000
+];
+
+fn base_value(p: Pc) -> i64 {
+    match p {
+        Pc(White, t) => BASE_VALUES[t as usize],
+        Pc(Black, t) => -BASE_VALUES[t as usize]
+    }
+}
+
+pub fn evaluate(pos: &Pos) -> i64 {
+    let mut score = 0;
+    //let mut sq = 1 << 63;
+    for i in 0..64 {
+        match pos.board.get(BitBoard(1 << i)) {
+            Some(p) => {
+                score = score + base_value(p) + bonus(p, i);
+            }
+            None => {}
+        }
+    }
+/*
+    for (i, p) in self.board.board.iter().enumerate() {
+        if let P(c, t) = *p {
+            let mut val = eval::base_value(t);
+            val +=  eval::bonus(i, Pc { color: c, kind: t });
+            if c == Black {
+                val = -val;
+            }
+            score += val;
+        }
+    }
+    */
+
+    score
 }

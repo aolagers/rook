@@ -2,6 +2,7 @@ use std::fmt;
 
 use self::PieceType::*;
 use self::Color::*;
+use bitboard::BitBoard;
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Copy, Clone, Debug)]
 pub enum Color {
@@ -84,15 +85,15 @@ impl fmt::Display for Square {
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub struct Move {
-    pub from: Square,
-    pub to: Square,
+    pub from: BitBoard,
+    pub to: BitBoard,
     pub piece: Pc,
     pub capture: Option<Pc>,
     pub promotion: Option<Pc>
 }
 impl fmt::Display for Move {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{} → {}", self.piece, self.from, self.to);
+        write!(f, "{}{} → {}", self.piece, self.from.to_str(), self.to.to_str());
         if let Some(capt) = self.capture { write!(f, " x{}", capt);  }
         if let Some(promotion) = self.promotion { write!(f, "={}", promotion); }
 
