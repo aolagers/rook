@@ -83,6 +83,8 @@ impl fmt::Display for Square {
     }
 }
 
+use board::Pos;
+
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub struct Move {
     pub from: BitBoard,
@@ -91,6 +93,47 @@ pub struct Move {
     pub capture: Option<Pc>,
     pub promotion: Option<Pc>
 }
+impl Move {
+    pub fn from_str(pos: &Pos, s: &str) -> Move {
+        let mut chars = s.chars();
+        let fr_str: String = s.chars().take(2).collect();
+        let to_str: String = s.chars().skip(2).take(2).collect();
+
+        Move {
+            from: BitBoard::from_str(&fr_str),
+            to: BitBoard::from_str(&to_str),
+            piece: pos.board.get(BitBoard::from_str(&fr_str)).unwrap(),
+            capture: pos.board.get(BitBoard::from_str(&to_str)),
+            promotion: None
+        }
+    }
+
+    pub fn from_input(pos: &Pos) -> Move {
+        use std::io::{self, Read};
+        let mut input = String::new();
+
+        print!("> ");
+        io::stdin().read_line(&mut input);
+
+        let mut sp = input.trim().split(" ");
+        let fr = BitBoard::from_str(sp.next().unwrap());
+        let to = BitBoard::from_str(sp.next().unwrap());
+        //  println!(" got '{}' '{}' '{}'", fr, to, input);
+        Move {
+            from: fr,
+            to: to,
+            piece: pos.board.get(fr).unwrap(),
+            capture: pos.board.get(to),
+            promotion: None
+        }
+    }
+
+    pub fn to_str(&self) -> String {
+        format!("{}{}", self.from.to_str(), self.to.to_str())
+    }
+
+}
+
 impl fmt::Display for Move {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}{} → {}", self.piece, self.from.to_str(), self.to.to_str());

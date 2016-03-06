@@ -3,5 +3,9 @@ name = "rook"
 version = "0.1.0"
 authors = ["Alex Lagerstedt <alex.lagerstedt@gmail.com>"]
 
+[[bin]]
+name = "rook-engine"
+path = "src/uci.rs"
+
 [dependencies]
 rand = "0.3.0"

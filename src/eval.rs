@@ -1,7 +1,7 @@
 use types::PieceType;
 use types::PieceType::*;
 use types::Pc;
-use ::Pos;
+use board::Pos;
 use bitboard::BitBoard;
 
 use types::Color::*;

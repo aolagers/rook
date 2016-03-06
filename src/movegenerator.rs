@@ -1,6 +1,6 @@
 
 
-use ::Pos;
+use board::Pos;
 use types::Move;
 use types::Pc;
 use types::Square;
@@ -62,8 +62,8 @@ fn pawn_moves(pos: &Pos, moves: &mut Vec<Move>) {
                 let atk1 = pp.se();
                 let atk2 = pp.sw();
 
-                if (atk1 & pos.board.blacks).is_not_empty() {pawn_captures.push((pp, atk1));}
-                if (atk2 & pos.board.blacks).is_not_empty() {pawn_captures.push((pp, atk2));}
+                if (atk1 & pos.board.whites).is_not_empty() {pawn_captures.push((pp, atk1));}
+                if (atk2 & pos.board.whites).is_not_empty() {pawn_captures.push((pp, atk2));}
             }
         }
     }
@@ -127,20 +127,24 @@ fn queen_moves(pos: &Pos, moves: &mut Vec<Move>) {
     ray_moves(pos, Pc(pos.turn, Queen), [BitBoard::up, BitBoard::down, BitBoard::left, BitBoard::right], moves);
 }
 
-fn ray_moves(pos: &Pos, piece: Pc, direction: [fn(&BitBoard) -> BitBoard; 4], moves: &mut Vec<Move>) {
+fn ray_moves(pos: &Pos, piece: Pc, direction_func: [fn(&BitBoard) -> BitBoard; 4], moves: &mut Vec<Move>) {
     let diag_pieces = pos.board.get_squares(piece);
     for dp in diag_pieces {
-        for f in direction.iter() {
+        for f in direction_func.iter() {
             let mut to = f(&dp);
             while to.is_not_empty() && (to & pos.board.mine(pos.turn)).is_empty() {
                 if (to & pos.board.mine(pos.turn)).is_empty() {
+                    let capt = pos.board.get(to);
                     moves.push(Move {
                         from: dp,
                         to: to,
                         piece: piece,
-                        capture: pos.board.get(to),
+                        capture: capt,
                         promotion: None
                     });
+                    if let Some(_) = capt {
+                        break;
+                    }
                 }
 
                 to = f(&to);
