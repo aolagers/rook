@@ -1,4 +1,3 @@
-use types::PieceType;
 use types::PieceType::*;
 use types::Pc;
 use board::Pos;

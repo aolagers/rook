@@ -1,12 +1,11 @@
 
 use std::fmt;
 use bitboard::BitBoard;
-use types::{Pc, Color, PieceType, Move, Square};
+use types::{Pc, Color, Move, Castling};
 use types::Color::*;
 use types::PieceType::*;
 use movegenerator;
 use eval;
-use bitflags;
 
 #[derive(Debug)]
 pub struct BBoard {
@@ -16,6 +15,7 @@ pub struct BBoard {
     pub occupied: BitBoard,
     pub free: BitBoard
 }
+
 impl BBoard {
     fn empty() -> Self {
         BBoard {
@@ -77,18 +77,9 @@ impl BBoard {
         return found;
     }
 
-    pub fn get_squares(&self, piece: Pc) -> Vec<BitBoard> {
-        let mut locations = Vec::new();
+    pub fn get_squares(&self, piece: Pc) -> BitBoard {
         let Pc(c, t) = piece;
-        let arr = self.pieces[c as usize + t as usize];
-
-        for i in 0..64 {
-            let sqbb = BitBoard(1 << i);
-            if (arr & sqbb).is_not_empty() {
-                locations.push(sqbb);
-            }
-        }
-        locations
+        self.pieces[c as usize + t as usize]
     }
 
     pub fn mine(&self, color: Color) -> BitBoard {
@@ -134,45 +125,12 @@ impl fmt::Display for BBoard {
     }
 }
 
-bitflags! {
-    pub flags CastlingRights: usize {
-        const WhiteKingside  = 0b0001,
-        const WhiteQueenside = 0b0010,
-        const BlackKingside  = 0b0100,
-        const BlackQueenside = 0b1000
-    }
-}
-impl CastlingRights {
-    pub fn from_str(s: &str) -> CastlingRights {
-        let mut rights = CastlingRights::empty();
-        for c in s.chars() {
-            match c {
-                'K' => rights = rights | WhiteKingside,
-                'Q' => rights = rights | WhiteQueenside,
-                'k' => rights = rights | BlackKingside,
-                'q' => rights = rights | BlackQueenside,
-                _ => {}
-            }
-        }
-        rights
-    }
-}
-impl fmt::Display for CastlingRights {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if self.contains(WhiteKingside) { write!(f, "K"); }
-        if self.contains(WhiteQueenside) { write!(f, "Q"); }
-        if self.contains(BlackKingside) { write!(f, "k"); }
-        if self.contains(BlackQueenside) { write!(f, "q"); }
-        Ok(())
-    }
-}
-
 #[derive(Debug)]
 pub struct Pos {
     pub board: BBoard,
     pub turn: Color,
     pub history: Vec<Move>,
-    pub castling_rights: CastlingRights,
+    pub castling_rights: Castling,
     pub moves: usize,
     pub halfmoves: usize
 }
@@ -184,7 +142,7 @@ impl Pos {
             board: BBoard::empty(),
             moves: 0,
             halfmoves: 0,
-            castling_rights: CastlingRights::all()
+            castling_rights: Castling::all()
         }
     }
 
@@ -247,9 +205,9 @@ impl Pos {
             "b" => Black,
             _ => panic!("invalid fen string")
         };
-        pos.castling_rights = CastlingRights::from_str(castling);
+        pos.castling_rights = Castling::from_str(castling);
         pos.halfmoves = halfmoves.parse::<usize>().unwrap();
-        pos.moves = halfmoves.parse::<usize>().unwrap();
+        pos.moves = moves.parse::<usize>().unwrap();
         pos
     }
 
@@ -297,15 +255,17 @@ impl Pos {
         return nodes;
     }
 
-    pub fn negamax_start(&self, depth: usize) -> (i64, Option<Move>) {
+    pub fn negamax_start(&self, depth: usize) -> (i64, usize, Option<Move>) {
         let mut pos = self.duplicate();
         let mut best_score = i64::min_value();
         let mut best_move = None;
+        let mut nodes = 0;
 
         let moves = movegenerator::generate_moves(self);
         for m in moves {
             pos.make_move(m);
-            let score = pos.negamax_iter(depth - 1);
+            let (score, n) = pos.negamax_iter(depth - 1);
+            nodes += n;
             if -score > best_score {
                 best_score = -score;
                 best_move = Some(m);
@@ -313,31 +273,32 @@ impl Pos {
             pos.unmake_move(m);
         }
 
-        (best_score, best_move)
+        (best_score, nodes, best_move)
     }
 
-    fn negamax_iter(&mut self, depth: usize) -> i64 {
+    fn negamax_iter(&mut self, depth: usize) -> (i64, usize) {
         if depth == 0 {
             let score = eval::evaluate(self);
             if self.turn == White {
-                return score;
+                return (score, 1);
             } else {
-                return -score;
+                return (-score, 1);
             }
         }
-
+        let mut nodes = 0;
         let mut best_score = i64::min_value();
         let moves = movegenerator::generate_moves(self);
         for m in moves {
             self.make_move(m);
-            let score = -self.negamax_iter(depth - 1);
-            if score > best_score {
-                best_score = score;
+            let (score, n) = self.negamax_iter(depth - 1);
+            nodes += n;
+            if -score > best_score {
+                best_score = -score;
             }
             self.unmake_move(m);
         }
 
-        best_score
+        (best_score, nodes)
     }
 }
 

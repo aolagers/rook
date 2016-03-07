@@ -1,5 +1,10 @@
+#![allow(unused_must_use)]
+
 #[macro_use]
 extern crate bitflags;
+
+#[macro_use]
+extern crate lazy_static;
 
 mod bitboard;
 mod eval;
@@ -8,7 +13,6 @@ mod movegenerator;
 mod board;
 
 
-use std::fmt;
 use std::io::prelude::*;
 use std::io;
 use std::fs::File;

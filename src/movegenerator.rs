@@ -3,7 +3,6 @@
 use board::Pos;
 use types::Move;
 use types::Pc;
-use types::Square;
 use types::Color::*;
 use types::PieceType::*;
 use bitboard::BitBoard;
@@ -74,7 +73,8 @@ fn pawn_moves(pos: &Pos, moves: &mut Vec<Move>) {
             to: pm.1,
             piece: Pc(pos.turn, Pawn),
             capture: None,
-            promotion: None
+            promotion: None,
+            castling: None
         });
     }
     for pc in pawn_captures {
@@ -83,39 +83,50 @@ fn pawn_moves(pos: &Pos, moves: &mut Vec<Move>) {
             to: pc.1,
             piece: Pc(pos.turn, Pawn),
             capture: pos.board.get(pc.1),
-            promotion: None
+            promotion: None,
+            castling: None
         });
     }
 }
 
 fn knight_moves(pos: &Pos, moves: &mut Vec<Move>) {
     let knight_positions = pos.board.get_squares(Pc(pos.turn, Knight));
-
     for kp in knight_positions {
-        let kmoves = [
-            kp.up().up().left(),
-            kp.up().up().right(),
-            kp.up().left().left(),
-            kp.up().right().right(),
-            kp.down().left().left(),
-            kp.down().right().right(),
-            kp.down().down().left(),
-            kp.down().down().right()
-        ];
-        for to in kmoves.iter() {
-            if to.is_not_empty() && (*to & pos.board.mine(pos.turn)).is_empty() {
-                moves.push(Move {
-                    from: kp,
-                    to: *to,
-                    piece: Pc(pos.turn, Knight),
-                    capture: pos.board.get(*to),
-                    promotion: None
-                });
-            }
+
+        let all_moves = KNIGHT_MOVES[kp];
+        let possible_mvs = all_moves & !pos.board.mine(pos.turn);
+        for to in possible_mvs {
+            moves.push(Move {
+                from: kp,
+                to: to,
+                piece: Pc(pos.turn, Knight),
+                capture: pos.board.get(to),
+                promotion: None,
+                castling: None
+            });
         }
     }
 }
 
+fn king_moves(pos: &Pos, moves: &mut Vec<Move>) {
+    let k_positions = pos.board.get_squares(Pc(pos.turn, King));
+
+    for k in k_positions {
+        let all_moves = KING_MOVES[k];
+        let possible_mvs = all_moves & !pos.board.mine(pos.turn);
+
+        for to in possible_mvs {
+            moves.push(Move {
+                from: k,
+                to: to,
+                piece: Pc(pos.turn, King),
+                capture: pos.board.get(to),
+                promotion: None,
+                castling: None
+            });
+        }
+    }
+}
 fn bishop_moves(pos: &Pos, moves: &mut Vec<Move>) {
     ray_moves(pos, Pc(pos.turn, Bishop), [BitBoard::nw, BitBoard::ne, BitBoard::sw, BitBoard::se], moves);
 }
@@ -140,7 +151,8 @@ fn ray_moves(pos: &Pos, piece: Pc, direction_func: [fn(&BitBoard) -> BitBoard; 4
                         to: to,
                         piece: piece,
                         capture: capt,
-                        promotion: None
+                        promotion: None,
+                        castling: None
                     });
                     if let Some(_) = capt {
                         break;
@@ -153,23 +165,49 @@ fn ray_moves(pos: &Pos, piece: Pc, direction_func: [fn(&BitBoard) -> BitBoard; 4
     }
 }
 
-fn king_moves(pos: &Pos, moves: &mut Vec<Move>) {
-    let k_positions = pos.board.get_squares(Pc(pos.turn, King));
 
-    for k in k_positions {
-        let kmoves = [
-            k.up(), k.ne(), k.right(), k.se(), k.down(), k.sw(), k.left(), k.nw()
-        ];
-        for to in kmoves.iter() {
-            if to.is_not_empty() && (*to & pos.board.mine(pos.turn)).is_empty() {
-                moves.push(Move {
-                    from: k,
-                    to: *to,
-                    piece: Pc(pos.turn, King),
-                    capture: pos.board.get(*to),
-                    promotion: None
-                });
-            }
+
+lazy_static! {
+    static ref KNIGHT_MOVES: [BitBoard; 64] = {
+        let mut kmoves = [BitBoard(0); 64];
+        for i in 0..64 {
+            let p = BitBoard(1 << i);
+            kmoves[i] =
+                p.up().up().left()      |
+                p.up().up().right()     |
+                p.up().left().left()    |
+                p.up().right().right()  |
+                p.down().left().left()  |
+                p.down().right().right()|
+                p.down().down().left()  |
+                p.down().down().right();
         }
+        kmoves
+    };
+
+    static ref KING_MOVES: [BitBoard; 64] = {
+        let mut kmoves = [BitBoard(0); 64];
+        for i in 0..64 {
+            let p = BitBoard(1 << i);
+            kmoves[i] = p.up() | p.down() | p.left() | p.right() |
+                        p.ne() | p.nw()   | p.se()   | p.sw();
+        }
+        kmoves
+    };
+}
+
+use std::ops::Index;
+
+impl Index<BitBoard> for [BitBoard] {
+    type Output = BitBoard;
+
+    fn index(&self, ib: BitBoard) -> &BitBoard {
+        &self[ib.largets_bit() - 1]
     }
 }
+
+//use test::Bencher;
+
+//#[bench]
+//fn bench_movegen() {
+//}

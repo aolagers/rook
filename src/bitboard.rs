@@ -24,27 +24,27 @@ impl BitBoard {
         BitBoard(self.0 >> 8)
     }
     pub fn left(&self) -> Self {
-        BitBoard((self.0 & ! COL_A) >> 1)
+        BitBoard((self.0 & !COL_A) >> 1)
     }
     pub fn right(&self) -> Self {
-        BitBoard((self.0 & ! COL_H) << 1)
+        BitBoard((self.0 & !COL_H) << 1)
     }
     pub fn nw(&self) -> Self {
-        BitBoard((self.0 & ! COL_A) << 7)
+        BitBoard((self.0 & !COL_A) << 7)
     }
     pub fn ne(&self) -> Self {
-        BitBoard((self.0 & ! COL_H) << 9)
+        BitBoard((self.0 & !COL_H) << 9)
     }
     pub fn sw(&self) -> Self {
-        BitBoard((self.0 & ! COL_A) >> 9)
+        BitBoard((self.0 & !COL_A) >> 9)
     }
     pub fn se(&self) -> Self {
-        BitBoard((self.0 & ! COL_H) >> 7)
+        BitBoard((self.0 & !COL_H) >> 7)
     }
     pub fn largets_bit(&self) -> usize {
         let mut cnt = 0;
         let mut div = self.0;
-        while div != 0  {
+        while div != 0 {
             div >>= 1;
             cnt += 1;
         }
@@ -57,12 +57,11 @@ impl BitBoard {
             cnt += 1;
             rest = rest & rest - 1;
         }
-        /*
-        for i in 0 .. 64 {
-            if self.0 & (1 << i) != 0 {
-                cnt += 1;
-            }
-        }*/
+        // for i in 0 .. 64 {
+        // if self.0 & (1 << i) != 0 {
+        // cnt += 1;
+        // }
+        // }
 
         cnt
     }
@@ -87,7 +86,7 @@ impl BitBoard {
         let r = rc as u8 - '1' as u8;
         debug_assert!(r <= 7);
         debug_assert!(c <= 7);
-        BitBoard(1 << (r*8 + c))
+        BitBoard(1 << (r * 8 + c))
     }
 }
 impl BitOr for BitBoard {
@@ -120,20 +119,51 @@ impl Not for BitBoard {
     }
 }
 impl fmt::Display for BitBoard {
-     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-         for i in 0..8 {
-             for j in 0..8 {
-                 let idx = (7-i)*8 + j;
-                 if self.0 & (1 << idx) > 0 {
-                     write!(f, "X ");
-                 } else {
-                     write!(f, ". ");
-                 }
-             }
-             write!(f, "\n");
-         }
-         write!(f, "")
-     }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for i in 0..8 {
+            for j in 0..8 {
+                let idx = (7 - i) * 8 + j;
+                if self.0 & (1 << idx) > 0 {
+                    write!(f, "X ");
+                } else {
+                    write!(f, ". ");
+                }
+            }
+            write!(f, "\n");
+        }
+        write!(f, "")
+    }
+}
+
+impl IntoIterator for BitBoard {
+    type Item = BitBoard;
+    type IntoIter = BitBoardIntoIterator;
+    fn into_iter(self) -> Self::IntoIter {
+        BitBoardIntoIterator { bits_left: self }
+    }
+}
+
+pub struct BitBoardIntoIterator {
+    bits_left: BitBoard
+}
+
+impl Iterator for BitBoardIntoIterator {
+    type Item = BitBoard;
+    fn next(&mut self) -> Option<BitBoard> {
+        let mut b = self.bits_left.0;
+        if b == 0 {
+            return None;
+        }
+        b |= b >> 1;
+        b |= b >> 2;
+        b |= b >> 4;
+        b |= b >> 8;
+        b |= b >> 16;
+        b |= b >> 32;
+        let lowerbits = (b >> 1);
+        self.bits_left.0 = self.bits_left.0 & lowerbits;
+        return Some(BitBoard(lowerbits + 1));
+    }
 }
 
 #[test]
@@ -155,7 +185,7 @@ fn bit_ops() {
 fn bit_moves() {
     let a1 = BitBoard(1);
     let a8 = BitBoard(1 << 56);
-    let f4 = BitBoard(1 << 3*8+4);
+    let f4 = BitBoard(1 << 3 * 8 + 4);
 
     assert_eq!(a1.up().up().up().up(), a8.down().down().down());
     assert_eq!(a1.left(), BitBoard::empty());
@@ -163,6 +193,19 @@ fn bit_moves() {
     assert_eq!(f4.ne().nw().sw().se(), f4);
     assert_eq!(f4.up().down().left().right(), f4);
     assert_eq!(BitBoard(0xffff_ffff_ffff_ffff)
-               .left().left().left().left().left().left().left()
-               .up().up().up().up().up().up().up(), a8);
+                   .left()
+                   .left()
+                   .left()
+                   .left()
+                   .left()
+                   .left()
+                   .left()
+                   .up()
+                   .up()
+                   .up()
+                   .up()
+                   .up()
+                   .up()
+                   .up(),
+               a8);
 }
