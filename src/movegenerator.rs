@@ -60,8 +60,14 @@ fn pawn_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
     let pawn_positions = pos.board.get_squares(Pc(pos.turn, Pawn));
     for pp in pawn_positions {
         let (all_moves, all_attacks) = match pos.turn {
-            White => (PAWN_MOVES_WHITE[pp], PAWN_ATTACKS_WHITE[pp]),
-            Black => (PAWN_MOVES_BLACK[pp], PAWN_ATTACKS_BLACK[pp])
+            White =>
+                (PAWN_MOVES_WHITE[pp] &
+                 !(BitBoard(0x0000_0000_00ff_0000) & !pp & pos.board.occupied).up(),
+                 PAWN_ATTACKS_WHITE[pp]),
+            Black =>
+                (PAWN_MOVES_BLACK[pp] &
+                 !(BitBoard(0x0000_ff00_0000_0000) & !pp & pos.board.occupied).down(),
+                 PAWN_ATTACKS_BLACK[pp])
         };
 
         let possible_moves = all_moves & !pos.board.occupied;
@@ -74,7 +80,7 @@ fn pawn_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
                 piece: Pc(pos.turn, Pawn),
                 capture: pos.board.get(m),
                 promotion: None,
-                castling: None
+                castling: None,
             });
         }
 
@@ -98,7 +104,7 @@ fn knight_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
                 piece: Pc(pos.turn, Knight),
                 capture: pos.board.get(to),
                 promotion: None,
-                castling: None
+                castling: None,
             });
         }
 
@@ -122,7 +128,7 @@ fn king_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
                 piece: Pc(pos.turn, King),
                 capture: pos.board.get(to),
                 promotion: None,
-                castling: None
+                castling: None,
             });
         }
         threatens = threatens | possible_mvs;
@@ -131,19 +137,37 @@ fn king_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
 
 }
 fn bishop_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
-    ray_moves(pos, Pc(pos.turn, Bishop), [BitBoard::nw, BitBoard::ne, BitBoard::sw, BitBoard::se], moves)
+    ray_moves(pos,
+              Pc(pos.turn, Bishop),
+              [BitBoard::nw, BitBoard::ne, BitBoard::sw, BitBoard::se],
+              moves)
 }
 fn rook_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
-    ray_moves(pos, Pc(pos.turn, Rook), [BitBoard::up, BitBoard::down, BitBoard::left, BitBoard::right], moves)
+    ray_moves(pos,
+              Pc(pos.turn, Rook),
+              [BitBoard::up, BitBoard::down, BitBoard::left, BitBoard::right],
+              moves)
 }
-fn queen_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard{
+fn queen_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
     let mut t = BitBoard(0);
-    t = t | ray_moves(pos, Pc(pos.turn, Queen), [BitBoard::nw, BitBoard::ne, BitBoard::sw, BitBoard::se], moves);
-    t = t | ray_moves(pos, Pc(pos.turn, Queen), [BitBoard::up, BitBoard::down, BitBoard::left, BitBoard::right], moves);
+    t = t |
+        ray_moves(pos,
+                  Pc(pos.turn, Queen),
+                  [BitBoard::nw, BitBoard::ne, BitBoard::sw, BitBoard::se],
+                  moves);
+    t = t |
+        ray_moves(pos,
+                  Pc(pos.turn, Queen),
+                  [BitBoard::up, BitBoard::down, BitBoard::left, BitBoard::right],
+                  moves);
     t
 }
 
-fn ray_moves(pos: &Pos, piece: Pc, direction_func: [fn(&BitBoard) -> BitBoard; 4], moves: &mut Vec<Move>) -> BitBoard {
+fn ray_moves(pos: &Pos,
+             piece: Pc,
+             direction_func: [fn(&BitBoard) -> BitBoard; 4],
+             moves: &mut Vec<Move>)
+             -> BitBoard {
     let mut threatens = BitBoard(0);
     let diag_pieces = pos.board.get_squares(piece);
     for dp in diag_pieces {
@@ -159,7 +183,7 @@ fn ray_moves(pos: &Pos, piece: Pc, direction_func: [fn(&BitBoard) -> BitBoard; 4
                         piece: piece,
                         capture: capt,
                         promotion: None,
-                        castling: None
+                        castling: None,
                     });
                     if let Some(_) = capt {
                         break;
@@ -255,8 +279,8 @@ impl Index<BitBoard> for [BitBoard] {
     }
 }
 
-//use test::Bencher;
+// use test::Bencher;
 
-//#[bench]
-//fn bench_movegen() {
-//}
+// #[bench]
+// fn bench_movegen() {
+// }
