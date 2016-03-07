@@ -50,14 +50,32 @@ fn perft2() {
     assert_eq!(game2.perft(4), 43238);
 }
 
+#[test]
+fn dont_move_into_check() {
+    let mut game = Pos::from_fen("8/8/8/8/8/ppp5/2p5/K7 w KQkq - 0 1");
+    let (_, nodes, best_move) = game.negamax_start(4);
+    assert_eq!(best_move, None);
+}
+
+#[test]
+fn dont_move_making_discovered_check() {
+    let mut game = Pos::from_fen("P7/P7/P7/P7/P7/P7/P6r/KP5r w KQkq - 0 1");
+    println!("{}", game);
+    let (_, nodes, best_move) = game.negamax_start(4);
+    assert_eq!(best_move, None);
+}
+
 use time::PreciseTime;
 
 fn main() {
     let yel = ansi_term::Colour::Red;
     let bold = yel.bold();
-    let mut game = Pos::start();
+    //let mut game = Pos::start();
     //let mut game = Pos::from_fen("8/8/8/8/8/ppp5/2p5/K7 w KQkq - 0 1");
     //let mut game = Pos::from_fen("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
+    //let mut game = Pos::from_fen("P7/P7/P7/P7/P7/P7/P6r/KP5r w KQkq - 0 1");
+
+    let mut game = Pos::from_fen("3r2k1/ppp2ppr/8/8/8/P4n1P/2P3q1/4K3 w KQkq - 0 1");
 
     println!("{}", game);
 
@@ -65,10 +83,15 @@ fn main() {
         if (game.turn == Black) || true {
             println!("thinking... ");
 
-            let start = PreciseTime::now();
+            let depth = match game.turn {
+                Black => 3,
+                White => 1
+            };
 
-            let (_, nodes, best_move) = game.negamax_start(4);
+            let start = PreciseTime::now();
+            let (_, nodes, best_move) = game.negamax_start(depth);
             let end = PreciseTime::now();
+
             let dur = start.to(end);
             println!("{} nodes in {:.2} s {:.2} knps", nodes, dur.num_milliseconds() as f64 / 1000.0, nodes as f64 / dur.num_milliseconds() as f64);
             match best_move {

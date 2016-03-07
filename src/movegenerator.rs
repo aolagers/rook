@@ -7,9 +7,31 @@ use types::Color::*;
 use types::PieceType::*;
 use bitboard::BitBoard;
 
-pub fn generate_moves(pos: &Pos) -> Vec<Move> {
 
+pub fn generate_legal_moves(pos: &Pos) -> Vec<Move> {
+    let mut p2 = pos.duplicate();
+    let mut legalmoves = Vec::new();
+
+    let allmoves = generate_moves(pos);
+
+    for m in allmoves {
+        p2.make_move(m);
+        let atk = generate_attack_map(&p2);
+        if (p2.board.pieces[pos.turn as usize + King as usize] & atk).is_not_empty() {
+            // CHECK
+        } else {
+            legalmoves.push(m.clone());
+        }
+
+        p2.unmake_move(m);
+    }
+
+    legalmoves
+}
+
+pub fn generate_moves(pos: &Pos) -> Vec<Move> {
     let mut moves = Vec::new();
+
     pawn_moves(pos, &mut moves);
     knight_moves(pos, &mut moves);
     bishop_moves(pos, &mut moves);
@@ -21,16 +43,13 @@ pub fn generate_moves(pos: &Pos) -> Vec<Move> {
 }
 
 pub fn generate_attack_map(pos: &Pos) -> BitBoard {
-    let mut p2 = pos.duplicate();
-    p2.turn = pos.turn.other();
-
     let mut moves = Vec::new();
-    let mut atk = pawn_moves(&p2, &mut moves);
-    atk = atk | knight_moves(&p2, &mut moves);
-    atk = atk | bishop_moves(&p2, &mut moves);
-    atk = atk | rook_moves(&p2, &mut moves);
-    atk = atk | queen_moves(&p2, &mut moves);
-    atk = atk | king_moves(&p2, &mut moves);
+    let mut atk = pawn_moves(pos, &mut moves);
+    atk = atk | knight_moves(pos, &mut moves);
+    atk = atk | bishop_moves(pos, &mut moves);
+    atk = atk | rook_moves(pos, &mut moves);
+    atk = atk | queen_moves(pos, &mut moves);
+    atk = atk | king_moves(pos, &mut moves);
 
     atk
 }

@@ -116,7 +116,9 @@ impl fmt::Display for Move {
             }
         } else {
             write!(f, "{}{} → {}", self.piece, self.from.to_str(), self.to.to_str());
-            if let Some(capt) = self.capture { write!(f, " x{}", capt);  }
+            if let Some(capt) = self.capture { write!(f, " x{}", capt);  } else {
+                write!(f, "    ");
+            }
             if let Some(promotion) = self.promotion { write!(f, "={}", promotion); }
         }
 

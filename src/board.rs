@@ -157,6 +157,15 @@ impl Pos {
             castling_rights: n.castling_rights
         }
     }
+    pub fn to_fen(&self) -> String {
+        let s = String::new();
+        for r in (0..8).rev() {
+            for c in 0..8 {
+                let p = self.board.get(BitBoard(1 << (r*8 + c)));
+            }
+        }
+        s
+    }
 
     pub fn from_fen(s: &str) -> Self {
         let mut pos = Pos::empty();
@@ -241,11 +250,10 @@ impl Pos {
             return 1;
         }
         let mut nodes = 0;
-        let moves = movegenerator::generate_moves(self);
+        let moves = movegenerator::generate_legal_moves(self);
         for m in moves {
             self.make_move(m);
             nodes += self.perft(depth - 1);
-            println!("{}", self);
             self.unmake_move(m);
         }
         return nodes;
@@ -257,18 +265,10 @@ impl Pos {
         let mut best_move = None;
         let mut nodes = 0;
 
-        let moves = movegenerator::generate_moves(self);
-        let atk = movegenerator::generate_attack_map(self);
+        let lmoves = movegenerator::generate_legal_moves(self);
 
-
-        for m in moves {
+        for m in lmoves {
             pos.make_move(m);
-            if (pos.board.pieces[self.turn as usize + King as usize] & atk).is_not_empty() {
-                // IN CHECK
-                pos.unmake_move(m);
-                continue;
-            }
-
             let (score, n) = pos.negamax_iter(depth - 1);
             nodes += n;
             if -score > best_score {
@@ -277,7 +277,7 @@ impl Pos {
             }
             pos.unmake_move(m);
         }
-
+        /*
         if best_move == None {
             println!("no legal moves found. all moves:");
             let moves = movegenerator::generate_moves(self);
@@ -286,6 +286,7 @@ impl Pos {
             }
 
         }
+        */
         (best_score, nodes, best_move)
     }
 
@@ -325,7 +326,7 @@ impl fmt::Display for Pos {
 
         for (i, m) in self.history.iter().enumerate() {
             if i % 2 == 0 {
-                write!(f, "\n    {}: {}", 1+(i/2), m);
+                write!(f, "\n    {:2}: {}", 1+(i/2), m);
             } else {
                 write!(f, " {}", m);
             }
