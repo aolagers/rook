@@ -1,3 +1,5 @@
+#[macro_use]
+extern crate bitflags;
 
 mod bitboard;
 mod eval;
@@ -5,54 +7,14 @@ mod types;
 mod movegenerator;
 mod board;
 
-use board::Pos;
 
 use std::fmt;
 use std::io::prelude::*;
 use std::io;
 use std::fs::File;
 
+use board::Pos;
 use types::Move;
-
-#[derive(Debug)]
-enum UciRequest {
-    Uci,
-    IsReady,
-    NewGame,
-    StartPos,
-    Unknown
-}
-
-#[derive(Debug)]
-enum Response {
-    Id,
-    ReadyOk,
-    Dunno
-}
-impl fmt::Display for Response {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use Response::*;
-        let mut out = String::new();
-        let s = match *self {
-            Id => "id name rook\nid author Alex\nuciok",
-            ReadyOk => "readyok",
-            Dunno => "dunno"
-        };
-        out.push_str(s);
-        write!(f, "{}", s)
-    }
-}
-
-fn parse_req(cmd: &str) -> Result<UciRequest, String> {
-    use UciRequest::*;
-    match cmd {
-        "uci" => Ok(UciRequest::Uci),
-        "isready" => Ok(UciRequest::IsReady),
-        "ucinewgame" => Ok(UciRequest::NewGame),
-        "position startpos" => Ok(UciRequest::StartPos),
-        _ => Ok(UciRequest::Unknown)
-    }
-}
 
 fn main() {
     let mut game = Pos::start();
@@ -89,6 +51,7 @@ fn main() {
                 println!("{}", game);
                 for mv in line.split(" ").skip(9) {
                     let mv = Move::from_str(&game, mv);
+
                     game.make_move(mv);
                 }
             }
@@ -105,7 +68,7 @@ fn main() {
                 }
             }
             else if line.starts_with("go") {
-                println!("info depth 1 diibadai");
+                println!("info depth 3");
 
                 let (_, best_move) = game.negamax_start(3);
                 let res = format!("bestmove {}", best_move.unwrap().to_str());

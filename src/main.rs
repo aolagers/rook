@@ -1,7 +1,11 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 #![allow(unused_must_use)]
+
+#[macro_use]
+extern crate bitflags;
 extern crate rand;
+
 
 mod bitboard;
 mod eval;
@@ -299,10 +303,10 @@ fn main() {
 
     loop {
         //let score =  eval::evaluate(&game) as f64 / 100.0;
-        if game.halfmoves == 100 {
-            println!("draw!");
-            break;
-        }
+        //if game.halfmoves == 100 {
+        //    println!("draw!");
+        //    break;
+        //}
         if (game.turn == Black) || true {
             println!("thinking...");
             let (sc, best_move) = game.negamax_start(4);

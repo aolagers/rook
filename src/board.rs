@@ -6,7 +6,7 @@ use types::Color::*;
 use types::PieceType::*;
 use movegenerator;
 use eval;
-
+use bitflags;
 
 #[derive(Debug)]
 pub struct BBoard {
@@ -32,7 +32,6 @@ impl BBoard {
         for bb in self.pieces.iter_mut() {
             bb.0 = bb.0 & !sq.0;
         }
-
         self.recalc();
     }
 
@@ -48,14 +47,11 @@ impl BBoard {
 
     fn set(&mut self, sq: BitBoard, p: Pc) {
         debug_assert!(sq.count_bits() == 1);
-        // println!("sq {}", sq.0);
-        // println!("sq {}", sq.to_str());
 
         self.clear(sq);
         let Pc(c, k) = p;
         let idx = c as usize + k as usize;
         self.pieces[idx] = self.pieces[idx] | sq;
-        // println!("{:?}", self.pieces[p.color as usize + p.kind as usize]);
         self.recalc();
     }
 
@@ -138,11 +134,45 @@ impl fmt::Display for BBoard {
     }
 }
 
+bitflags! {
+    pub flags CastlingRights: usize {
+        const WhiteKingside  = 0b0001,
+        const WhiteQueenside = 0b0010,
+        const BlackKingside  = 0b0100,
+        const BlackQueenside = 0b1000
+    }
+}
+impl CastlingRights {
+    pub fn from_str(s: &str) -> CastlingRights {
+        let mut rights = CastlingRights::empty();
+        for c in s.chars() {
+            match c {
+                'K' => rights = rights | WhiteKingside,
+                'Q' => rights = rights | WhiteQueenside,
+                'k' => rights = rights | BlackKingside,
+                'q' => rights = rights | BlackQueenside,
+                _ => {}
+            }
+        }
+        rights
+    }
+}
+impl fmt::Display for CastlingRights {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if self.contains(WhiteKingside) { write!(f, "K"); }
+        if self.contains(WhiteQueenside) { write!(f, "Q"); }
+        if self.contains(BlackKingside) { write!(f, "k"); }
+        if self.contains(BlackQueenside) { write!(f, "q"); }
+        Ok(())
+    }
+}
+
 #[derive(Debug)]
 pub struct Pos {
     pub board: BBoard,
     pub turn: Color,
     pub history: Vec<Move>,
+    pub castling_rights: CastlingRights,
     pub moves: usize,
     pub halfmoves: usize
 }
@@ -153,17 +183,13 @@ impl Pos {
             history: Vec::new(),
             board: BBoard::empty(),
             moves: 0,
-            halfmoves: 0
+            halfmoves: 0,
+            castling_rights: CastlingRights::all()
         }
     }
 
     pub fn start() -> Self {
         Pos::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-    }
-
-    fn test() -> Self {
-        //Pos::from_fen("1n4n1/pppppppp/8/8/8/8/PPPPPPPP/1N4N1 w KQkq - 0 1")
-        Pos::from_fen("8/bbb2bbb/8/8/8/8/BBBB4/8 w KQkq - 0 1")
     }
 
     fn duplicate(&self) -> Pos {
@@ -173,7 +199,8 @@ impl Pos {
             history: n.history.clone(),
             board: n.board.duplicate(),
             moves: n.moves,
-            halfmoves: n.halfmoves
+            halfmoves: n.halfmoves,
+            castling_rights: n.castling_rights
         }
     }
 
@@ -220,7 +247,7 @@ impl Pos {
             "b" => Black,
             _ => panic!("invalid fen string")
         };
-
+        pos.castling_rights = CastlingRights::from_str(castling);
         pos.halfmoves = halfmoves.parse::<usize>().unwrap();
         pos.moves = halfmoves.parse::<usize>().unwrap();
         pos
@@ -312,45 +339,15 @@ impl Pos {
 
         best_score
     }
-
-    /*
-    fn negamax_iter(&self, depth: usize) -> i64 {
-        if depth == 0 {
-            if self.turn == White {
-                return (self.score, self.clone());
-            } else {
-                return (-self.score, self.clone());
-            }
-        }
-
-        let mut best_score = -1000000;
-        let mut best_pos = self.clone();
-        let mvs = self.generate_moves();
-        if mvs.len() == 0 {
-            let new = self.clone();
-            if -new.score > best_score {
-                best_score = -new.score;
-                best_pos = new;
-            }
-        }
-        for m in mvs {
-            let new = self.mv(m);
-            let (score, pos) = new.negamax(depth - 1);
-
-            if -score > best_score{
-                best_score = -score;
-                best_pos = pos;
-            }
-        }
-        (best_score, best_pos)
-    }
-    */
 }
+
 impl fmt::Display for Pos {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Pos {{\n");
-        write!(f, "  turn: {:?}\n", self.turn);
-        write!(f, "  history:");
+        //write!(f, "Pos {{\n");
+        //write!(f, "  turn: {:?}\n", self.turn);
+        //write!(f, "  cast: {}\n", self.castling_rights);
+
+        //write!(f, "  history:");
 
         for (i, m) in self.history.iter().enumerate() {
             if i % 2 == 0 {
@@ -359,9 +356,11 @@ impl fmt::Display for Pos {
                 write!(f, " {}", m);
             }
         }
+        write!(f, "\n\n");
+        write!(f, "       {:?}    {:4}", self.turn, self.castling_rights);
 
-        write!(f, "\n  board: {}", self.board);
-        write!(f, "\n}}");
+        write!(f, "{}\n", self.board);
+        //write!(f, "\n}}");
         Ok(())
     }
 }

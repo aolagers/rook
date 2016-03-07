@@ -7,5 +7,10 @@ authors = ["Alex Lagerstedt <alex.lagerstedt@gmail.com>"]
 name = "rook-engine"
 path = "src/uci.rs"
 
+[[bin]]
+name = "rook"
+path = "src/main.rs"
+
 [dependencies]
+bitflags = "0.5.0"
 rand = "0.3.0"
