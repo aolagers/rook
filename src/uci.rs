@@ -74,7 +74,7 @@ fn main() {
             else if line.starts_with("go") {
                 println!("info depth 3");
 
-                let (_, best_move) = game.negamax_start(3);
+                let (_, _, best_move) = game.negamax_start(3);
                 let res = format!("bestmove {}", best_move.unwrap().to_str());
                 response.push_str(&res);
             }

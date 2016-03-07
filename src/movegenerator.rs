@@ -10,7 +10,6 @@ use bitboard::BitBoard;
 pub fn generate_moves(pos: &Pos) -> Vec<Move> {
 
     let mut moves = Vec::new();
-
     pawn_moves(pos, &mut moves);
     knight_moves(pos, &mut moves);
     bishop_moves(pos, &mut moves);
@@ -21,31 +20,35 @@ pub fn generate_moves(pos: &Pos) -> Vec<Move> {
     moves
 }
 
-fn pawn_moves(pos: &Pos, moves: &mut Vec<Move>) {
+pub fn generate_attack_map(pos: &Pos) -> BitBoard {
+    let mut p2 = pos.duplicate();
+    p2.turn = pos.turn.other();
+
+    let mut moves = Vec::new();
+    let mut atk = pawn_moves(&p2, &mut moves);
+    atk = atk | knight_moves(&p2, &mut moves);
+    atk = atk | bishop_moves(&p2, &mut moves);
+    atk = atk | rook_moves(&p2, &mut moves);
+    atk = atk | queen_moves(&p2, &mut moves);
+    atk = atk | king_moves(&p2, &mut moves);
+
+    atk
+}
+
+fn pawn_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
+    let mut threatens = BitBoard(0);
 
     let pawn_positions = pos.board.get_squares(Pc(pos.turn, Pawn));
-
     for pp in pawn_positions {
         let (all_moves, all_attacks) = match pos.turn {
             White => (PAWN_MOVES_WHITE[pp], PAWN_ATTACKS_WHITE[pp]),
             Black => (PAWN_MOVES_BLACK[pp], PAWN_ATTACKS_BLACK[pp])
         };
 
-        let possible_moves = all_moves & pos.board.free;
+        let possible_moves = all_moves & !pos.board.occupied;
         let possible_attacks = all_attacks & pos.board.theirs(pos.turn);
 
-        for m in possible_moves {
-            moves.push(Move {
-                from: pp,
-                to: m,
-                piece: Pc(pos.turn, Pawn),
-                capture: None,
-                promotion: None,
-                castling: None
-            });
-        }
-
-        for m in possible_attacks {
+        for m in possible_moves | possible_attacks {
             moves.push(Move {
                 from: pp,
                 to: m,
@@ -55,10 +58,15 @@ fn pawn_moves(pos: &Pos, moves: &mut Vec<Move>) {
                 castling: None
             });
         }
+
+        threatens = threatens | (all_attacks & !pos.board.mine(pos.turn));
     }
+
+    threatens
 }
 
-fn knight_moves(pos: &Pos, moves: &mut Vec<Move>) {
+fn knight_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
+    let mut threatens = BitBoard(0);
     let knight_positions = pos.board.get_squares(Pc(pos.turn, Knight));
     for kp in knight_positions {
 
@@ -74,10 +82,14 @@ fn knight_moves(pos: &Pos, moves: &mut Vec<Move>) {
                 castling: None
             });
         }
+
+        threatens = threatens | possible_mvs;
     }
+    threatens
 }
 
-fn king_moves(pos: &Pos, moves: &mut Vec<Move>) {
+fn king_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
+    let mut threatens = BitBoard(0);
     let k_positions = pos.board.get_squares(Pc(pos.turn, King));
 
     for k in k_positions {
@@ -94,25 +106,32 @@ fn king_moves(pos: &Pos, moves: &mut Vec<Move>) {
                 castling: None
             });
         }
+        threatens = threatens | possible_mvs;
     }
+    threatens
+
 }
-fn bishop_moves(pos: &Pos, moves: &mut Vec<Move>) {
-    ray_moves(pos, Pc(pos.turn, Bishop), [BitBoard::nw, BitBoard::ne, BitBoard::sw, BitBoard::se], moves);
+fn bishop_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
+    ray_moves(pos, Pc(pos.turn, Bishop), [BitBoard::nw, BitBoard::ne, BitBoard::sw, BitBoard::se], moves)
 }
-fn rook_moves(pos: &Pos, moves: &mut Vec<Move>) {
-    ray_moves(pos, Pc(pos.turn, Rook), [BitBoard::up, BitBoard::down, BitBoard::left, BitBoard::right], moves);
+fn rook_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
+    ray_moves(pos, Pc(pos.turn, Rook), [BitBoard::up, BitBoard::down, BitBoard::left, BitBoard::right], moves)
 }
-fn queen_moves(pos: &Pos, moves: &mut Vec<Move>) {
-    ray_moves(pos, Pc(pos.turn, Queen), [BitBoard::nw, BitBoard::ne, BitBoard::sw, BitBoard::se], moves);
-    ray_moves(pos, Pc(pos.turn, Queen), [BitBoard::up, BitBoard::down, BitBoard::left, BitBoard::right], moves);
+fn queen_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard{
+    let mut t = BitBoard(0);
+    t = t | ray_moves(pos, Pc(pos.turn, Queen), [BitBoard::nw, BitBoard::ne, BitBoard::sw, BitBoard::se], moves);
+    t = t | ray_moves(pos, Pc(pos.turn, Queen), [BitBoard::up, BitBoard::down, BitBoard::left, BitBoard::right], moves);
+    t
 }
 
-fn ray_moves(pos: &Pos, piece: Pc, direction_func: [fn(&BitBoard) -> BitBoard; 4], moves: &mut Vec<Move>) {
+fn ray_moves(pos: &Pos, piece: Pc, direction_func: [fn(&BitBoard) -> BitBoard; 4], moves: &mut Vec<Move>) -> BitBoard {
+    let mut threatens = BitBoard(0);
     let diag_pieces = pos.board.get_squares(piece);
     for dp in diag_pieces {
         for f in direction_func.iter() {
             let mut to = f(&dp);
             while to.is_not_empty() && (to & pos.board.mine(pos.turn)).is_empty() {
+                threatens = threatens | to;
                 if (to & pos.board.mine(pos.turn)).is_empty() {
                     let capt = pos.board.get(to);
                     moves.push(Move {
@@ -132,6 +151,8 @@ fn ray_moves(pos: &Pos, piece: Pc, direction_func: [fn(&BitBoard) -> BitBoard; 4
             }
         }
     }
+
+    threatens
 }
 
 

@@ -12,8 +12,7 @@ pub struct BBoard {
     pub pieces: [BitBoard; 12],
     pub whites: BitBoard,
     pub blacks: BitBoard,
-    pub occupied: BitBoard,
-    pub free: BitBoard
+    pub occupied: BitBoard
 }
 
 impl BBoard {
@@ -22,8 +21,7 @@ impl BBoard {
             pieces: [BitBoard(0); 12],
             whites: BitBoard(0),
             blacks: BitBoard(0),
-            occupied: BitBoard(0),
-            free: BitBoard(0xffff_ffff_ffff_ffff)
+            occupied: BitBoard(0)
         }
     }
 
@@ -35,13 +33,12 @@ impl BBoard {
         self.recalc();
     }
 
-    fn duplicate(&self) -> BBoard {
+    pub fn duplicate(&self) -> BBoard {
         BBoard {
             pieces: self.pieces.clone(),
             whites: self.whites,
             blacks: self.blacks,
-            occupied: self.occupied,
-            free: self.free
+            occupied: self.occupied
         }
     }
 
@@ -102,7 +99,6 @@ impl BBoard {
         for i in 0..6  { self.whites = self.whites | self.pieces[i]; }
         for i in 6..12 { self.blacks = self.blacks | self.pieces[i]; }
         self.occupied = self.whites | self.blacks;
-        self.free = !self.occupied;
     }
 }
 
@@ -150,7 +146,7 @@ impl Pos {
         Pos::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
     }
 
-    fn duplicate(&self) -> Pos {
+    pub fn duplicate(&self) -> Pos {
         let n = self;
         Pos {
             turn: n.turn,
@@ -262,8 +258,17 @@ impl Pos {
         let mut nodes = 0;
 
         let moves = movegenerator::generate_moves(self);
+        let atk = movegenerator::generate_attack_map(self);
+
+
         for m in moves {
             pos.make_move(m);
+            if (pos.board.pieces[self.turn as usize + King as usize] & atk).is_not_empty() {
+                // IN CHECK
+                pos.unmake_move(m);
+                continue;
+            }
+
             let (score, n) = pos.negamax_iter(depth - 1);
             nodes += n;
             if -score > best_score {
@@ -273,6 +278,14 @@ impl Pos {
             pos.unmake_move(m);
         }
 
+        if best_move == None {
+            println!("no legal moves found. all moves:");
+            let moves = movegenerator::generate_moves(self);
+            for m in moves {
+                println!("{}", m);
+            }
+
+        }
         (best_score, nodes, best_move)
     }
 
@@ -286,7 +299,7 @@ impl Pos {
             }
         }
         let mut nodes = 0;
-        let mut best_score = i64::min_value();
+        let mut best_score = i64::min_value() + 1;
         let moves = movegenerator::generate_moves(self);
         for m in moves {
             self.make_move(m);

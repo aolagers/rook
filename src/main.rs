@@ -53,21 +53,21 @@ fn perft2() {
 use time::PreciseTime;
 
 fn main() {
-    //let mut game = Pos::start();
-    let mut game = Pos::from_fen("8/pppppppp/8/8/8/8/PPPPPPPP/8 w KQkq - 0 1");
+    let yel = ansi_term::Colour::Red;
+    let bold = yel.bold();
+    let mut game = Pos::start();
+    //let mut game = Pos::from_fen("8/8/8/8/8/ppp5/2p5/K7 w KQkq - 0 1");
     //let mut game = Pos::from_fen("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
 
-    let yel = ansi_term::Colour::Yellow;
-    let bold = yel.bold();
-    println!("{}", bold.paint(format!("{}", game)));
+    println!("{}", game);
 
     while true {
         if (game.turn == Black) || true {
-            println!("thinking...");
+            println!("thinking... ");
 
             let start = PreciseTime::now();
 
-            let (_, nodes, best_move) = game.negamax_start(5);
+            let (_, nodes, best_move) = game.negamax_start(4);
             let end = PreciseTime::now();
             let dur = start.to(end);
             println!("{} nodes in {:.2} s {:.2} knps", nodes, dur.num_milliseconds() as f64 / 1000.0, nodes as f64 / dur.num_milliseconds() as f64);
