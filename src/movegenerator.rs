@@ -22,70 +22,39 @@ pub fn generate_moves(pos: &Pos) -> Vec<Move> {
 }
 
 fn pawn_moves(pos: &Pos, moves: &mut Vec<Move>) {
+
     let pawn_positions = pos.board.get_squares(Pc(pos.turn, Pawn));
-    let mut pawn_moves = Vec::new();
-    let mut pawn_captures = Vec::new();
 
     for pp in pawn_positions {
-        match pos.turn {
-            White => {
-                let m = pp.up();
-                if (m & pos.board.free).is_not_empty() {
-                    pawn_moves.push((pp, m));
-                }
-                if pp.0 & 0x0000_0000_0000_ff00 != 0 {
-                    let dm = pp.up().up();
-                    if ((pp.up() | pp.up().up()) & pos.board.occupied).is_empty() {
-                        pawn_moves.push((pp, dm));
-                    }
-                }
+        let (all_moves, all_attacks) = match pos.turn {
+            White => (PAWN_MOVES_WHITE[pp], PAWN_ATTACKS_WHITE[pp]),
+            Black => (PAWN_MOVES_BLACK[pp], PAWN_ATTACKS_BLACK[pp])
+        };
 
-                let atk1 = pp.ne();
-                let atk2 = pp.nw();
+        let possible_moves = all_moves & pos.board.free;
+        let possible_attacks = all_attacks & pos.board.theirs(pos.turn);
 
-                if (atk1 & pos.board.blacks).is_not_empty() {pawn_captures.push((pp, atk1));}
-                if (atk2 & pos.board.blacks).is_not_empty() {pawn_captures.push((pp, atk2));}
-            },
-            Black => {
-                let m = pp.down();
-                if (m & pos.board.free).is_not_empty() {
-                    pawn_moves.push((pp, m));
-                }
-                if pp.0 & 0x00ff_0000_0000_0000 != 0 {
-                    let dm = pp.down().down();
-                    if ((pp.down() | pp.down().down()) & pos.board.occupied).is_empty() {
-                        pawn_moves.push((pp, dm));
-                    }
-                }
-
-                let atk1 = pp.se();
-                let atk2 = pp.sw();
-
-                if (atk1 & pos.board.whites).is_not_empty() {pawn_captures.push((pp, atk1));}
-                if (atk2 & pos.board.whites).is_not_empty() {pawn_captures.push((pp, atk2));}
-            }
+        for m in possible_moves {
+            moves.push(Move {
+                from: pp,
+                to: m,
+                piece: Pc(pos.turn, Pawn),
+                capture: None,
+                promotion: None,
+                castling: None
+            });
         }
-    }
 
-    for pm in pawn_moves {
-        moves.push(Move {
-            from: pm.0,
-            to: pm.1,
-            piece: Pc(pos.turn, Pawn),
-            capture: None,
-            promotion: None,
-            castling: None
-        });
-    }
-    for pc in pawn_captures {
-        moves.push(Move {
-            from: pc.0,
-            to: pc.1,
-            piece: Pc(pos.turn, Pawn),
-            capture: pos.board.get(pc.1),
-            promotion: None,
-            castling: None
-        });
+        for m in possible_attacks {
+            moves.push(Move {
+                from: pp,
+                to: m,
+                piece: Pc(pos.turn, Pawn),
+                capture: pos.board.get(m),
+                promotion: None,
+                castling: None
+            });
+        }
     }
 }
 
@@ -193,6 +162,46 @@ lazy_static! {
                         p.ne() | p.nw()   | p.se()   | p.sw();
         }
         kmoves
+    };
+
+    static ref PAWN_MOVES_WHITE: [BitBoard; 64] = {
+        let mut moves = [BitBoard(0); 64];
+        for i in 0..64 {
+            let p = BitBoard(1 << i);
+            moves[i] = p.up();
+            if i > 7 && i < 16 { // row 2
+                moves[i] = p.up() | p.up().up();
+            }
+        }
+        moves
+    };
+    static ref PAWN_MOVES_BLACK: [BitBoard; 64] = {
+        let mut moves = [BitBoard(0); 64];
+        for i in 0..64 {
+            let p = BitBoard(1 << i);
+            moves[i] = p.down();
+            if i > 47 && i < 56 { // row 7
+                moves[i] = p.down() | p.down().down();
+            }
+        }
+        moves
+    };
+
+    static ref PAWN_ATTACKS_WHITE: [BitBoard; 64] = {
+        let mut moves = [BitBoard(0); 64];
+        for i in 0..64 {
+            let p = BitBoard(1 << i);
+            moves[i] = p.ne() | p.nw();
+        }
+        moves
+    };
+    static ref PAWN_ATTACKS_BLACK: [BitBoard; 64] = {
+        let mut moves = [BitBoard(0); 64];
+        for i in 0..64 {
+            let p = BitBoard(1 << i);
+            moves[i] = p.se() | p.sw();
+        }
+        moves
     };
 }
 
