@@ -144,7 +144,7 @@ impl IntoIterator for BitBoard {
 }
 
 pub struct BitBoardIntoIterator {
-    bits_left: BitBoard
+    bits_left: BitBoard,
 }
 
 impl Iterator for BitBoardIntoIterator {
@@ -186,6 +186,9 @@ fn bit_moves() {
     let a1 = BitBoard(1);
     let a8 = BitBoard(1 << 56);
     let f4 = BitBoard(1 << 3 * 8 + 4);
+
+    assert_eq!(a1.left(), BitBoard(0));
+    assert_eq!(a8.up(), BitBoard(0));
 
     assert_eq!(a1.up().up().up().up(), a8.down().down().down());
     assert_eq!(a1.left(), BitBoard::empty());

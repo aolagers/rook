@@ -74,12 +74,17 @@ fn pawn_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
         let possible_attacks = all_attacks & pos.board.theirs(pos.turn);
 
         for m in possible_moves | possible_attacks {
+            let prom = if (m.0 & 0xff00_0000_0000_00ff) != 0 {
+                Some(Pc(pos.turn, Queen))
+            } else {
+                None
+            };
             moves.push(Move {
                 from: pp,
                 to: m,
                 piece: Pc(pos.turn, Pawn),
                 capture: pos.board.get(m),
-                promotion: None,
+                promotion: prom,
                 castling: None,
             });
         }
@@ -134,33 +139,29 @@ fn king_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
         threatens = threatens | possible_mvs;
     }
     threatens
-
 }
+
 fn bishop_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
     ray_moves(pos,
               Pc(pos.turn, Bishop),
               [BitBoard::nw, BitBoard::ne, BitBoard::sw, BitBoard::se],
               moves)
 }
+
 fn rook_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
     ray_moves(pos,
               Pc(pos.turn, Rook),
               [BitBoard::up, BitBoard::down, BitBoard::left, BitBoard::right],
               moves)
 }
+
 fn queen_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
-    let mut t = BitBoard(0);
-    t = t |
-        ray_moves(pos,
-                  Pc(pos.turn, Queen),
-                  [BitBoard::nw, BitBoard::ne, BitBoard::sw, BitBoard::se],
-                  moves);
-    t = t |
-        ray_moves(pos,
-                  Pc(pos.turn, Queen),
-                  [BitBoard::up, BitBoard::down, BitBoard::left, BitBoard::right],
-                  moves);
-    t
+    ray_moves(pos,
+        Pc(pos.turn, Queen),
+        [BitBoard::nw, BitBoard::ne,   BitBoard::sw,   BitBoard::se],    moves)
+    | ray_moves(pos,
+        Pc(pos.turn, Queen),
+        [BitBoard::up, BitBoard::down, BitBoard::left, BitBoard::right], moves)
 }
 
 fn ray_moves(pos: &Pos,
@@ -197,8 +198,6 @@ fn ray_moves(pos: &Pos,
 
     threatens
 }
-
-
 
 lazy_static! {
     static ref KNIGHT_MOVES: [BitBoard; 64] = {

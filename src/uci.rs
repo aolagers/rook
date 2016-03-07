@@ -20,6 +20,7 @@ use std::fs::File;
 use board::Pos;
 use types::Move;
 
+
 fn main() {
     let mut game = Pos::start();
     let mut log = File::create("log.txt").unwrap();
@@ -33,6 +34,7 @@ fn main() {
             log.write_all("\n".as_bytes());
 
             let mut response = String::new();
+            let args: Vec<&str> = line.split(" ").collect();
 
             if line == "uci" {
                 response.push_str("id name rook\n");
@@ -71,10 +73,18 @@ fn main() {
                     }
                 }
             }
-            else if line.starts_with("go") {
-                println!("info depth 3");
+            else if line.starts_with("go ") {
+                let mut depth = 4;
+                if args.len() > 1 && args[1] == "depth" {
 
-                let (_, _, best_move) = game.negamax_start(3);
+                    log.write_all("got depth cmd".as_bytes());
+                    match args[2].parse::<usize>() {
+                        Ok(d) => {depth = d;},
+                        _ => {}
+                    }
+                }
+
+                let (_, _, best_move) = game.negamax_start(depth);
                 let res = format!("bestmove {}", best_move.unwrap().to_str());
                 response.push_str(&res);
             }

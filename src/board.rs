@@ -27,6 +27,7 @@ impl BBoard {
 
     fn clear(&mut self, sq: BitBoard) {
         debug_assert!(sq.count_bits() == 1);
+
         for bb in self.pieces.iter_mut() {
             bb.0 = bb.0 & !sq.0;
         }
@@ -130,6 +131,7 @@ pub struct Pos {
     pub moves: usize,
     pub halfmoves: usize
 }
+
 impl Pos {
     pub fn empty() -> Self {
         Pos {
@@ -157,6 +159,7 @@ impl Pos {
             castling_rights: n.castling_rights
         }
     }
+
     pub fn to_fen(&self) -> String {
         let s = String::new();
         for r in (0..8).rev() {
@@ -173,7 +176,7 @@ impl Pos {
         let board = parts.next().unwrap();
         let turn = parts.next().unwrap();
         let castling = parts.next().unwrap();
-        let passant = parts.next().unwrap();
+        let _passant = parts.next().unwrap();
         let halfmoves = parts.next().unwrap();
         let moves = parts.next().unwrap();
 
@@ -225,7 +228,10 @@ impl Pos {
         self.turn = self.turn.other();
 
         self.board.clear(mv.from);
-        self.board.set(mv.to, mv.piece);
+        match mv.promotion {
+            None =>    { self.board.set(mv.to, mv.piece); },
+            Some(p) => { self.board.set(mv.to, p); }
+        }
         self.history.push(mv);
 
         //if let Pc(_, Pawn) = mv.piece { self.halfmoves = 0; }
@@ -331,6 +337,7 @@ impl fmt::Display for Pos {
                 write!(f, " {}", m);
             }
         }
+
         write!(f, "\n\n");
         write!(f, "       {:?}    {:4}", self.turn, self.castling_rights);
 
