@@ -21,7 +21,7 @@ pub struct Board {
 }
 
 impl Board {
-    // Empty board
+    /// Empty board
     pub fn empty() -> Self {
         Board {
             pieces: [BitBoard::empty(); 12],
@@ -31,12 +31,14 @@ impl Board {
         }
     }
 
+    /// Clear one square
     pub fn clear(&mut self, sq: BitBoard) {
         debug_assert!(sq.count_bits() == 1);
 
         for bb in self.pieces.iter_mut() {
             *bb = *bb & !sq;
         }
+
         self.recalc();
     }
 

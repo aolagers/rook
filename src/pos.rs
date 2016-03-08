@@ -10,7 +10,7 @@ use types::PieceType::*;
 use movegenerator;
 use eval;
 use board::Board;
-use hash;
+// use hash;
 
 #[derive(Debug)]
 pub struct Pos {

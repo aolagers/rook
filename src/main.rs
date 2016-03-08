@@ -1,36 +1,14 @@
-// #![allow(dead_code)]
-// #![allow(unused_variables)]
 #![allow(unused_must_use)]
 
-#[macro_use]
-extern crate bitflags;
+extern crate rook;
+use rook::eval;
+use rook::movegenerator;
+use rook::pos::Pos;
+use rook::types::Move;
+use rook::types::Color::*;
 
-#[macro_use]
-extern crate lazy_static;
-
-extern crate rand;
-extern crate ansi_term;
 extern crate time;
-
 use time::PreciseTime;
-
-// use ansi_term::Style;
-
-mod bitboard;
-mod eval;
-mod types;
-mod movegenerator;
-mod board;
-mod hash;
-mod pos;
-
-// use std::io;
-
-// use bitboard::BitBoard;
-use types::Move;
-use types::Color::*;
-
-use pos::Pos;
 
 fn main() {
     // let yel = ansi_term::Colour::Red;
@@ -62,7 +40,7 @@ fn main() {
             println!("\nthinking... ");
 
             let depth = match game.turn {
-                Black => 4,
+                Black => 5,
                 White => 2,
             };
 

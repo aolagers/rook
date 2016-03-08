@@ -110,7 +110,7 @@ pub fn evaluate(pos: &Pos) -> i64 {
     //let mut sq = 1 << 63;
     for w in pos.board.whites {
         let Pc(_, t) = pos.board.get(w).unwrap();
-        let sq_num = w.largets_bit() - 1;
+        let sq_num = w.largest_bit() - 1;
         let idx = (7-(sq_num/8))*8 + sq_num % 8; // index backwards for white
         let pc_val = BASE_VALUES[t as usize] + match t {
             Pawn => PAWN[idx],
@@ -124,7 +124,7 @@ pub fn evaluate(pos: &Pos) -> i64 {
     }
     for b in pos.board.blacks {
         let Pc(_, t) = pos.board.get(b).unwrap();
-        let sq_num = b.largets_bit() - 1;
+        let sq_num = b.largest_bit() - 1;
         let idx = sq_num;
         let pc_val = BASE_VALUES[t as usize] + match t {
             Pawn => PAWN[idx],

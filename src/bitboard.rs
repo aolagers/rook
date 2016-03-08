@@ -25,62 +25,27 @@ impl BitBoard {
     pub fn is_not_empty(&self) -> bool {
         self.0 != 0
     }
-    pub fn up(&self) -> Self {
-        BitBoard(self.0 << 8)
-    }
-    pub fn down(&self) -> Self {
-        BitBoard(self.0 >> 8)
-    }
-    pub fn left(&self) -> Self {
-        BitBoard((self.0 & !COL_A) >> 1)
-    }
-    pub fn right(&self) -> Self {
-        BitBoard((self.0 & !COL_H) << 1)
-    }
-    pub fn nw(&self) -> Self {
-        BitBoard((self.0 & !COL_A) << 7)
-    }
-    pub fn ne(&self) -> Self {
-        BitBoard((self.0 & !COL_H) << 9)
-    }
-    pub fn sw(&self) -> Self {
-        BitBoard((self.0 & !COL_A) >> 9)
-    }
-    pub fn se(&self) -> Self {
-        BitBoard((self.0 & !COL_H) >> 7)
-    }
-    pub fn largets_bit(&self) -> usize {
-        let mut cnt = 0;
-        let mut div = self.0;
-        while div != 0 {
-            div >>= 1;
-            cnt += 1;
-        }
-        cnt
-    }
-    pub fn count_bits(&self) -> usize {
-        let mut cnt = 0;
-        let mut rest = self.0;
-        while rest != 0 {
-            cnt += 1;
-            rest = rest & rest - 1;
-        }
-        // for i in 0 .. 64 {
-        // if self.0 & (1 << i) != 0 {
-        // cnt += 1;
-        // }
-        // }
 
-        cnt
+    pub fn up(&self)    -> Self { BitBoard(self.0 << 8) }
+    pub fn down(&self)  -> Self { BitBoard(self.0 >> 8) }
+    pub fn left(&self)  -> Self { BitBoard((self.0 & !COL_A) >> 1) }
+    pub fn right(&self) -> Self { BitBoard((self.0 & !COL_H) << 1) }
+    pub fn nw(&self)    -> Self { BitBoard((self.0 & !COL_A) << 7) }
+    pub fn ne(&self)    -> Self { BitBoard((self.0 & !COL_H) << 9) }
+    pub fn sw(&self)    -> Self { BitBoard((self.0 & !COL_A) >> 9) }
+    pub fn se(&self)    -> Self { BitBoard((self.0 & !COL_H) >> 7) }
+
+    pub fn largest_bit(&self) -> usize {
+        (64 - self.0.leading_zeros()) as usize
     }
 
-    pub fn count_ones(&self) -> u32 {
+    pub fn count_bits(&self) -> u32 {
         self.0.count_ones()
     }
 
     pub fn to_str(&self) -> String {
         debug_assert!(self.count_bits() == 1);
-        let lb = self.largets_bit() - 1;
+        let lb = self.largest_bit() - 1;
         let r = lb / 8;
         let c = lb % 8;
         debug_assert!(r <= 7);

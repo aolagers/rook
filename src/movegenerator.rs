@@ -293,6 +293,6 @@ impl Index<BitBoard> for [BitBoard] {
     type Output = BitBoard;
 
     fn index(&self, ib: BitBoard) -> &BitBoard {
-        &self[ib.largets_bit() - 1]
+        &self[ib.largest_bit() - 1]
     }
 }

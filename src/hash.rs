@@ -6,16 +6,13 @@ use types::Color::*;
 use bitboard::BitBoard;
 use pos::Pos;
 use std::collections::HashMap;
-use std::cell::RefCell;
-use std::rc::Rc;
+// use std::cell::RefCell;
+// use std::rc::Rc;
 use std::sync::Mutex;
-
-// static HASH: Rc<RefCell<HashMap<u64, u64>>> = Rc::new(RefCell::new(HashMap::new()));
-
 
 pub fn piece_hash(pc: usize, sq: BitBoard) -> u64 {
     debug_assert!(sq.count_bits() == 1);
-    HASH_INIT[pc][sq.largets_bit() - 1]
+    HASH_INIT[pc][sq.largest_bit() - 1]
 }
 
 pub fn inc() {
