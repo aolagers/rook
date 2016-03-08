@@ -61,17 +61,25 @@ fn main() {
                 }
             }
             else if line.starts_with("go ") {
-                let mut depth = 4;
+                let mut depth = 5;
                 if args.len() > 1 && args[1] == "depth" {
 
-                    log.write_all("got depth cmd".as_bytes());
+                    // log.write_all("got depth cmd".as_bytes());
                     match args[2].parse::<usize>() {
                         Ok(d) => {depth = d;},
                         _ => {}
                     }
                 }
-
-                let (_, _, best_move) = game.negamax_start(depth);
+                for d in 1 .. depth {
+                    let (tmp_score, tmp_nodes, tmp_best) = game.negamax_start(d);
+                    if let Some(tbest) = tmp_best {
+                        println!("info depth {} nodes {} pv {} score cp {}", d, tmp_nodes, tbest.to_str(), tmp_score);
+                    }
+                }
+                let (s, n, best_move) = game.negamax_start(depth);
+                if let Some(tbest) = best_move {
+                    println!("info depth {} nodes {} pv {} score cp {}", depth, n, tbest.to_str(), s);
+                }
                 let res = format!("bestmove {}", best_move.unwrap().to_str());
                 response.push_str(&res);
             }
