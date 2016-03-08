@@ -1,7 +1,8 @@
+#![allow(dead_code)]
+
 use types::PieceType::*;
 use types::Pc;
-use board::Pos;
-use bitboard::BitBoard;
+use pos::Pos;
 
 use types::Color::*;
 

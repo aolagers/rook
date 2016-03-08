@@ -1,10 +1,12 @@
+#![allow(dead_code)]
+
 use std::fmt;
 use std::io::{self, Read};
 
 use self::PieceType::*;
 use self::Color::*;
 use bitboard::BitBoard;
-use board::Pos;
+use pos::Pos;
 
 
 /// Player color
@@ -38,6 +40,11 @@ pub enum PieceType {
 /// Chess piece. Consists of color and piece type.
 #[derive(Eq, PartialEq, Ord, PartialOrd, Copy, Clone, Debug)]
 pub struct Pc(pub Color, pub PieceType);
+impl Pc {
+    pub fn as_index(&self) -> usize {
+        self.0 as usize + self.1 as usize
+    }
+}
 
 impl fmt::Display for Pc {
     /// Piece is printed as a [unicode chess
@@ -117,7 +124,7 @@ impl Move {
             }
         };
 
-        let mut castling = None;
+        // let mut castling = None;
         // if let Pc(_, King) = pc {
         //     if let Some(cst) = Castling::from_square(to) {
         //         castling = Some(cst);
@@ -130,12 +137,11 @@ impl Move {
             piece: pc,
             capture: pos.board.get(to),
             promotion: pr_type,
-            castling: castling,
+            castling: None,
         })
     }
 
     pub fn from_input(pos: &Pos) -> Move {
-        let mut ok = false;
         loop {
             println!("> ");
             let mut input = String::new();
@@ -235,11 +241,5 @@ impl Castling {
         //     BLACK_KINGSIDE => (BitBoard(1 << 63), BitBoard(1 << 61)),
         //     BLACK_QUEENSIDE => (BitBoard(1 << 56), BitBoard(1 << 59)),
         // }
-    }
-}
-
-impl fmt::Display for Castling {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        Ok(())
     }
 }

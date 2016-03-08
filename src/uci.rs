@@ -2,7 +2,7 @@
 
 extern crate rook;
 
-use rook::board::Pos;
+use rook::pos::Pos;
 use rook::types::{Move};
 
 use std::fs::File;

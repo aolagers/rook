@@ -1,13 +1,11 @@
 
 
-use board::Pos;
+use pos::Pos;
 use types::Move;
 use types::Pc;
 use types::Color::*;
 use types::PieceType::*;
 use bitboard::BitBoard;
-
-use types::Castling;
 
 pub fn generate_legal_moves(pos: &Pos) -> Vec<Move> {
     let mut p2 = pos.duplicate();

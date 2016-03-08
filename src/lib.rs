@@ -1,4 +1,4 @@
-// #![allow(dead_code)]
+#![allow(dead_code)]
 // #![allow(unused_variables)]
 #![allow(unused_must_use)]
 
@@ -18,8 +18,10 @@ pub mod board;
 pub mod bitboard;
 pub mod eval;
 pub mod movegenerator;
+pub mod hash;
+pub mod pos;
 
-use board::Pos;
+use pos::Pos;
 
 #[test]
 fn perft1() {
@@ -42,7 +44,6 @@ fn perft2() {
     assert_eq!(game2.perft(4), 43238);
 }
 
-#[test]
 fn perft3() {
     let mut game2 = Pos::from_fen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
 
@@ -52,7 +53,6 @@ fn perft3() {
     assert_eq!(game2.perft(3), 97862);
     assert_eq!(game2.perft(4), 4085603);
     assert_eq!(game2.perft(5), 193690690);
-
 }
 
 #[test]
