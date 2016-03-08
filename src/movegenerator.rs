@@ -56,18 +56,18 @@ pub fn generate_attack_map(pos: &Pos) -> BitBoard {
 }
 
 fn pawn_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
-    let mut threatens = BitBoard(0);
+    let mut threatens = BitBoard::empty();
 
     let pawn_positions = pos.board.get_squares(Pc(pos.turn, Pawn));
     for pp in pawn_positions {
         let (all_moves, all_attacks) = match pos.turn {
             White =>
                 (PAWN_MOVES_WHITE[pp] &
-                 !(BitBoard(0x0000_0000_00ff_0000) & !pp & pos.board.occupied).up(),
+                 !(BitBoard::new(0x0000_0000_00ff_0000) & !pp & pos.board.occupied).up(),
                  PAWN_ATTACKS_WHITE[pp]),
             Black =>
                 (PAWN_MOVES_BLACK[pp] &
-                 !(BitBoard(0x0000_ff00_0000_0000) & !pp & pos.board.occupied).down(),
+                 !(BitBoard::new(0x0000_ff00_0000_0000) & !pp & pos.board.occupied).down(),
                  PAWN_ATTACKS_BLACK[pp])
         };
 
@@ -75,7 +75,7 @@ fn pawn_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
         let possible_attacks = all_attacks & pos.board.theirs(pos.turn);
 
         for m in possible_moves | possible_attacks {
-            let prom = if (m.0 & 0xff00_0000_0000_00ff) != 0 {
+            let prom = if (m & BitBoard::new(0xff00_0000_0000_00ff)).is_not_empty() {
                 Some(Pc(pos.turn, Queen))
             } else {
                 None
@@ -97,7 +97,7 @@ fn pawn_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
 }
 
 fn knight_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
-    let mut threatens = BitBoard(0);
+    let mut threatens = BitBoard::empty();
     let knight_positions = pos.board.get_squares(Pc(pos.turn, Knight));
     for kp in knight_positions {
 
@@ -120,7 +120,7 @@ fn knight_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
 }
 
 fn king_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
-    let mut threatens = BitBoard(0);
+    let mut threatens = BitBoard::empty();
     let k_positions = pos.board.get_squares(Pc(pos.turn, King));
 
     for k in k_positions {
@@ -190,7 +190,7 @@ fn ray_moves(pos: &Pos,
              direction_func: [fn(&BitBoard) -> BitBoard; 4],
              moves: &mut Vec<Move>)
              -> BitBoard {
-    let mut threatens = BitBoard(0);
+    let mut threatens = BitBoard::empty();
     let diag_pieces = pos.board.get_squares(piece);
     for dp in diag_pieces {
         for f in direction_func.iter() {
@@ -222,9 +222,9 @@ fn ray_moves(pos: &Pos,
 
 lazy_static! {
     static ref KNIGHT_MOVES: [BitBoard; 64] = {
-        let mut kmoves = [BitBoard(0); 64];
+        let mut kmoves = [BitBoard::empty(); 64];
         for i in 0..64 {
-            let p = BitBoard(1 << i);
+            let p = BitBoard::from_square(i);
             kmoves[i] =
                 p.up().up().left()      |
                 p.up().up().right()     |
@@ -239,9 +239,9 @@ lazy_static! {
     };
 
     static ref KING_MOVES: [BitBoard; 64] = {
-        let mut kmoves = [BitBoard(0); 64];
+        let mut kmoves = [BitBoard::empty(); 64];
         for i in 0..64 {
-            let p = BitBoard(1 << i);
+            let p = BitBoard::from_square(i);
             kmoves[i] = p.up() | p.down() | p.left() | p.right() |
                         p.ne() | p.nw()   | p.se()   | p.sw();
         }
@@ -249,9 +249,9 @@ lazy_static! {
     };
 
     static ref PAWN_MOVES_WHITE: [BitBoard; 64] = {
-        let mut moves = [BitBoard(0); 64];
+        let mut moves = [BitBoard::empty(); 64];
         for i in 0..64 {
-            let p = BitBoard(1 << i);
+            let p = BitBoard::from_square(i);
             moves[i] = p.up();
             if i > 7 && i < 16 { // row 2
                 moves[i] = p.up() | p.up().up();
@@ -260,9 +260,9 @@ lazy_static! {
         moves
     };
     static ref PAWN_MOVES_BLACK: [BitBoard; 64] = {
-        let mut moves = [BitBoard(0); 64];
+        let mut moves = [BitBoard::empty(); 64];
         for i in 0..64 {
-            let p = BitBoard(1 << i);
+            let p = BitBoard::from_square(i);
             moves[i] = p.down();
             if i > 47 && i < 56 { // row 7
                 moves[i] = p.down() | p.down().down();
@@ -272,17 +272,17 @@ lazy_static! {
     };
 
     static ref PAWN_ATTACKS_WHITE: [BitBoard; 64] = {
-        let mut moves = [BitBoard(0); 64];
+        let mut moves = [BitBoard::empty(); 64];
         for i in 0..64 {
-            let p = BitBoard(1 << i);
+            let p = BitBoard::from_square(i);
             moves[i] = p.ne() | p.nw();
         }
         moves
     };
     static ref PAWN_ATTACKS_BLACK: [BitBoard; 64] = {
-        let mut moves = [BitBoard(0); 64];
+        let mut moves = [BitBoard::empty(); 64];
         for i in 0..64 {
-            let p = BitBoard(1 << i);
+            let p = BitBoard::from_square(i);
             moves[i] = p.se() | p.sw();
         }
         moves

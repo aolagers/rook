@@ -107,7 +107,7 @@ pub fn evaluate(pos: &Pos) -> i64 {
     let mut score = 0;
     //let mut sq = 1 << 63;
     for i in 0..64 {
-        match pos.board.get(BitBoard(1 << i)) {
+        match pos.board.get(BitBoard::from_square(i)) {
             Some(p) => {
                 score = score + base_value(p) + bonus(p, i);
             }

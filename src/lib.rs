@@ -2,6 +2,8 @@
 // #![allow(unused_variables)]
 #![allow(unused_must_use)]
 
+//! Global comments for rook chess engine core
+
 #[macro_use]
 extern crate bitflags;
 #[macro_use]
@@ -11,26 +13,13 @@ extern crate ansi_term;
 // extern crate test;
 extern crate time;
 
-use time::PreciseTime;
-
-use ansi_term::Style;
-
 pub mod types;
 pub mod board;
-
-mod bitboard;
-mod eval;
-mod movegenerator;
-
-use std::io;
-
-use bitboard::BitBoard;
-use types::Move;
-use types::Color::*;
+pub mod bitboard;
+pub mod eval;
+pub mod movegenerator;
 
 use board::Pos;
-
-// use rand::Rng;
 
 #[test]
 fn perft1() {

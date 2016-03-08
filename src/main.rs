@@ -83,70 +83,68 @@ fn is_checkmate() {
     let (_, nodes, best_move) = game.negamax_start(4);
     assert_eq!(best_move, None);
 }
+
 #[test]
 fn pawn_double_start() {
     let game = Pos::from_fen("8/p7/8/8/8/7p/7P/8 w KQkq - 0 1");
     let (_, nodes, best_move) = game.negamax_start(4);
     assert_eq!(best_move, None);
 }
+
 fn main() {
-    let yel = ansi_term::Colour::Red;
-    let bold = yel.bold();
-    // let mut game = Pos::start();
-    let mut game = Pos::from_fen("k7/8/8/8/8/8/8/R3K2R w KQkq - 0 1");
+    // let yel = ansi_term::Colour::Red;
+    // let bold = yel.bold();
+    let mut game = Pos::start();
+    // let mut game = Pos::from_fen("k7/8/8/8/8/8/8/R3K2R w KQkq - 0 1");
     // let mut game = Pos::from_fen("8/8/1PP3k1/8/8/5pp1/1K6/8 w - - 0 1");
     // let mut game = Pos::from_fen("8/8/8/8/8/ppp5/2p5/K7 w KQkq - 0 1");
     // let mut game = Pos::from_fen("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
     // let mut game = Pos::from_fen("P7/P7/P7/P7/P7/P7/P6r/KP5r w KQkq - 0 1");
-
     // let mut game = Pos::from_fen("3r2k1/ppp2ppr/8/8/8/P4n1P/2P3q1/4K3 w KQkq - 0 1");
     // let mut game = Pos::from_fen("8/p7/8/8/8/8/7P/8 w KQkq - 0 1");
 
+    // for m in movegenerator::generate_legal_moves(&game) { println!("{}", m); }
 
-    // for m in movegenerator::generate_legal_moves(&game) {
-    //    println!("{}", m);
-    // }
+    let human = false;
+    let min_think = 0;
 
     while true {
-        println!("{}", game);
-        if (game.turn == Black) || false {
-            println!("thinking... ");
+        println!("{}     eval: {}", game, eval::evaluate(&game));
+
+        if (game.turn == Black) || !human {
+            println!("\nthinking... ");
 
             let depth = match game.turn {
-                Black => 3,
-                White => 1,
+                Black => 4,
+                White => 2,
             };
 
             let start = PreciseTime::now();
             let (_, nodes, best_move) = game.negamax_start(depth);
             let end = PreciseTime::now();
-
             let dur = start.to(end);
-            println!("{} nodes in {:.2} s {:.2} knps",
+            let tl = (min_think as i32 - dur.num_milliseconds() as i32);
+            if tl > 0 { std::thread::sleep_ms(tl as u32); }
+
+            println!("{:7} nodes in {:2.2} s {:3.2} knps",
                      nodes,
                      dur.num_milliseconds() as f64 / 1000.0,
                      nodes as f64 / dur.num_milliseconds() as f64);
+
             match best_move {
                 Some(mv) => {
                     game.make_move(mv);
-                    println!("{} eval: {}", game, eval::evaluate(&game));
                 }
                 None => {
                     println!("No moves for {:?}", game.turn);
                     break;
                 }
             }
-            let tl = (1000 as i32 - dur.num_milliseconds() as i32);
-            if tl > 0 {
-                    std::thread::sleep_ms(tl as u32);
-                }
 
         } else {
             let legals = movegenerator::generate_legal_moves(&game);
 
-            for l in legals.iter() {
-                // println!("{}", l);
-            }
+            // for l in legals.iter() { println!("{}", l); }
 
             let ok = false;
             let mut mv = None;

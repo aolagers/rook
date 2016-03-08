@@ -6,10 +6,18 @@ const COL_A: u64 = 0x0101_0101_0101_0101;
 const COL_H: u64 = 0x8080_8080_8080_8080;
 
 #[derive(Eq, PartialEq, Clone, Copy, Debug)]
-pub struct BitBoard(pub u64);
+pub struct BitBoard(u64);
+
 impl BitBoard {
     pub fn empty() -> Self {
         BitBoard(0)
+    }
+    pub fn from_square(sq: usize) -> Self {
+        debug_assert!(sq < 64);
+        BitBoard(1 << sq)
+    }
+    pub fn new(n: u64) -> Self {
+        BitBoard(n)
     }
     pub fn is_empty(&self) -> bool {
         self.0 == 0
@@ -65,6 +73,7 @@ impl BitBoard {
 
         cnt
     }
+
     pub fn to_str(&self) -> String {
         debug_assert!(self.count_bits() == 1);
         let lb = self.largets_bit() - 1;
@@ -78,46 +87,56 @@ impl BitBoard {
         s.push(('1' as u8 + r as u8) as char);
         s
     }
-    pub fn from_str(s: &str) -> BitBoard {
-        let mut it = s.chars();
+
+    pub fn from_str(s: &str) -> Option<BitBoard> {
+        if s.len() != 2 { return None; }
+        let mut it = s.trim().chars();
         let cc = it.next().unwrap();
         let rc = it.next().unwrap();
         let c = cc as u8 - 'a' as u8;
         let r = rc as u8 - '1' as u8;
-        debug_assert!(r <= 7);
-        debug_assert!(c <= 7);
-        BitBoard(1 << (r * 8 + c))
+        if r <= 7 && c <= 7 {
+            Some(BitBoard(1 << (r * 8 + c)))
+        } else {
+            None
+        }
     }
 }
+
 impl BitOr for BitBoard {
     type Output = BitBoard;
     fn bitor(self, rhs: BitBoard) -> Self {
         BitBoard(self.0 | rhs.0)
     }
 }
+
 // impl BitOrAssign for BitBoard {
 //     fn bitor_assign(&mut self, rhs: BitBoard) {
 //         self.0 |= rhs.0;
 //     }
 // }
+
 impl BitXor for BitBoard {
     type Output = BitBoard;
     fn bitxor(self, rhs: BitBoard) -> Self {
         BitBoard(self.0 ^ rhs.0)
     }
 }
+
 impl BitAnd for BitBoard {
     type Output = BitBoard;
     fn bitand(self, rhs: BitBoard) -> Self {
         BitBoard(self.0 & rhs.0)
     }
 }
+
 impl Not for BitBoard {
     type Output = BitBoard;
     fn not(self) -> Self {
         BitBoard(!self.0)
     }
 }
+
 impl fmt::Display for BitBoard {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for i in 0..8 {
@@ -189,26 +208,12 @@ fn bit_moves() {
 
     assert_eq!(a1.left(), BitBoard(0));
     assert_eq!(a8.up(), BitBoard(0));
-
     assert_eq!(a1.up().up().up().up(), a8.down().down().down());
     assert_eq!(a1.left(), BitBoard::empty());
-
     assert_eq!(f4.ne().nw().sw().se(), f4);
     assert_eq!(f4.up().down().left().right(), f4);
     assert_eq!(BitBoard(0xffff_ffff_ffff_ffff)
-                   .left()
-                   .left()
-                   .left()
-                   .left()
-                   .left()
-                   .left()
-                   .left()
-                   .up()
-                   .up()
-                   .up()
-                   .up()
-                   .up()
-                   .up()
-                   .up(),
+                   .left().left().left().left().left().left().left()
+                   .up().up().up().up().up().up().up(),
                a8);
 }

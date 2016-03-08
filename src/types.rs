@@ -6,6 +6,8 @@ use self::Color::*;
 use bitboard::BitBoard;
 use board::Pos;
 
+
+/// Player color
 #[derive(Eq, PartialEq, Ord, PartialOrd, Copy, Clone, Debug)]
 pub enum Color {
     White = 0,
@@ -13,6 +15,8 @@ pub enum Color {
 }
 
 impl Color {
+
+    /// Returns the opposite color
     pub fn other(self) -> Color {
         match self {
             White => Black,
@@ -31,10 +35,13 @@ pub enum PieceType {
     King = 5,
 }
 
+/// Chess piece. Consists of color and piece type.
 #[derive(Eq, PartialEq, Ord, PartialOrd, Copy, Clone, Debug)]
 pub struct Pc(pub Color, pub PieceType);
 
 impl fmt::Display for Pc {
+    /// Piece is printed as a [unicode chess
+    /// symbol](https://en.wikipedia.org/wiki/Chess_symbols_in_Unicode).
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let c = match *self {
             Pc(Black, Pawn) => '♙',
@@ -55,23 +62,45 @@ impl fmt::Display for Pc {
     }
 }
 
+/// Chess move
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub struct Move {
+    /// Origin square
     pub from: BitBoard,
+    /// Target square
     pub to: BitBoard,
+    /// Piece
     pub piece: Pc,
+    /// If this is a capturing move, contains the captured piece.
     pub capture: Option<Pc>,
+    /// If this is a promoting move, contains the type of the new piece.
     pub promotion: Option<Pc>,
     pub castling: Option<Castling>,
 }
 
 impl Move {
-    pub fn from_str(pos: &Pos, s: &str) -> Move {
+    /// Parse a move from string.
+    /// For example, 'e2e4' for a simple pawn move or 'e7e8q' for promotion to queen
+    pub fn from_str(pos: &Pos, s: &str) -> Option<Move> {
         let fr_str: String = s.chars().take(2).collect();
         let to_str: String = s.chars().skip(2).take(2).collect();
         let pr_in = s.chars().skip(4).next();
 
-        let pc = pos.board.get(BitBoard::from_str(&fr_str)).unwrap();
+        let fr = match BitBoard::from_str(&fr_str) {
+            None => { return None; },
+            Some(sq) => sq
+        };
+
+        let to = match BitBoard::from_str(&to_str) {
+            None => { return None; },
+            Some(sq) => sq
+        };
+
+        let pc = match pos.board.get(fr) {
+            None => { return None; },
+            Some(p) => p
+        };
+
         let Pc(color, _) = pc;
 
         let pr_type = match pr_in {
@@ -88,9 +117,6 @@ impl Move {
             }
         };
 
-        let fr = BitBoard::from_str(&fr_str);
-        let to = BitBoard::from_str(&to_str);
-
         let mut castling = None;
         // if let Pc(_, King) = pc {
         //     if let Some(cst) = Castling::from_square(to) {
@@ -98,24 +124,30 @@ impl Move {
         //     }
         // }
 
-        Move {
+        Some(Move {
             from: fr,
             to: to,
             piece: pc,
-            capture: pos.board.get(BitBoard::from_str(&to_str)),
+            capture: pos.board.get(to),
             promotion: pr_type,
             castling: castling,
-        }
+        })
     }
 
     pub fn from_input(pos: &Pos) -> Move {
-        let mut input = String::new();
-
-        println!("> ");
-        io::stdin().read_line(&mut input);
-
-        let mv = Move::from_str(pos, input.trim());
-        mv
+        let mut ok = false;
+        loop {
+            println!("> ");
+            let mut input = String::new();
+            io::stdin().read_line(&mut input);
+            let mv = Move::from_str(pos, input.trim());
+            match mv {
+                Some(m) => { return m; },
+                None => {
+                    println!("Invalid move: '{}'", input.trim());
+                }
+            }
+        }
     }
 
     pub fn to_str(&self) -> String {
@@ -188,15 +220,15 @@ impl Castling {
 
     fn empty_pattern(self) -> BitBoard {
         match self {
-            Castling::WhiteKingside  => BitBoard(0x0000_0000_0000_0060),
-            Castling::WhiteQueenside => BitBoard(0x0000_0000_0000_000e),
-            Castling::BlackKingside  => BitBoard(0x6000_0000_0000_0000),
-            Castling::BlackQueenside => BitBoard(0x0e00_0000_0000_0000),
+            Castling::WhiteKingside  => BitBoard::new(0x0000_0000_0000_0060),
+            Castling::WhiteQueenside => BitBoard::new(0x0000_0000_0000_000e),
+            Castling::BlackKingside  => BitBoard::new(0x6000_0000_0000_0000),
+            Castling::BlackQueenside => BitBoard::new(0x0e00_0000_0000_0000),
         }
     }
 
     pub fn get_rook_move(self) -> (BitBoard, BitBoard) {
-        (BitBoard(0), BitBoard(0))
+        (BitBoard::empty(), BitBoard::empty())
         // match self {
         //     WHITE_KINGSIDE => (BitBoard(1 << 7), BitBoard(1 << 5)),
         //     WHITE_QUEENSIDE => (BitBoard(1 << 0), BitBoard(1 << 3)),

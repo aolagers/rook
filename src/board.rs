@@ -1,4 +1,3 @@
-
 use std::fmt;
 use bitboard::BitBoard;
 use types::{Pc, Color, Move, Castling};
@@ -8,20 +7,28 @@ use movegenerator;
 use eval;
 
 #[derive(Debug)]
-pub struct BBoard {
+pub struct Board {
+    /// Array of bitboards, one for each piece. 2 colors * 6 pieces = 12 bitboards
     pub pieces: [BitBoard; 12],
+
+    /// White pieces
     pub whites: BitBoard,
+
+    /// Black pieces
     pub blacks: BitBoard,
+
+    /// All pieces on the board
     pub occupied: BitBoard
 }
 
-impl BBoard {
+impl Board {
+    // Empty board
     fn empty() -> Self {
-        BBoard {
-            pieces: [BitBoard(0); 12],
-            whites: BitBoard(0),
-            blacks: BitBoard(0),
-            occupied: BitBoard(0)
+        Board {
+            pieces: [BitBoard::empty(); 12],
+            whites: BitBoard::empty(),
+            blacks: BitBoard::empty(),
+            occupied: BitBoard::empty(),
         }
     }
 
@@ -29,13 +36,14 @@ impl BBoard {
         debug_assert!(sq.count_bits() == 1);
 
         for bb in self.pieces.iter_mut() {
-            bb.0 = bb.0 & !sq.0;
+            *bb = *bb & !sq;
         }
         self.recalc();
     }
 
-    pub fn duplicate(&self) -> BBoard {
-        BBoard {
+    /// Returns a new board with the same position
+    pub fn duplicate(&self) -> Board {
+        Board {
             pieces: self.pieces.clone(),
             whites: self.whites,
             blacks: self.blacks,
@@ -43,6 +51,7 @@ impl BBoard {
         }
     }
 
+    /// Put a piece on a square
     fn set(&mut self, sq: BitBoard, p: Pc) {
         debug_assert!(sq.count_bits() == 1);
 
@@ -53,6 +62,7 @@ impl BBoard {
         self.recalc();
     }
 
+    /// Get the piece on a given square
     pub fn get(&self, sq: BitBoard) -> Option<Pc> {
         let mut found = None;
         for (idx, bb) in self.pieces.iter().enumerate() {
@@ -75,11 +85,13 @@ impl BBoard {
         return found;
     }
 
+    /// Get a BitBoard the positions of all pieces of this type
     pub fn get_squares(&self, piece: Pc) -> BitBoard {
         let Pc(c, t) = piece;
         self.pieces[c as usize + t as usize]
     }
 
+    /// Get a bitboard of all pieces by the given player
     pub fn mine(&self, color: Color) -> BitBoard {
         match color {
             White => self.whites,
@@ -87,6 +99,7 @@ impl BBoard {
         }
     }
 
+    /// Get a bitboard of all the enemy pieces of the given player
     pub fn theirs(&self, color: Color) -> BitBoard {
         match color {
             White => self.blacks,
@@ -95,21 +108,22 @@ impl BBoard {
     }
 
     fn recalc(&mut self) {
-        self.whites = BitBoard(0);
-        self.blacks = BitBoard(0);
+        self.whites = BitBoard::empty();
+        self.blacks = BitBoard::empty();
         for i in 0..6  { self.whites = self.whites | self.pieces[i]; }
         for i in 6..12 { self.blacks = self.blacks | self.pieces[i]; }
         self.occupied = self.whites | self.blacks;
     }
 }
 
-impl fmt::Display for BBoard {
+impl fmt::Display for Board {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "\n    ");
         for i in 0..8 {
             write!(f, "{} ", (7-i)+1);
             for j in 0..8 {
-                match self.get(BitBoard(1 << ((7-i)*8 + j))) {
+                let sq = BitBoard::from_square(((7-i)*8 + j));
+                match self.get(sq) {
                     None => write!(f, ". "),
                     Some(p) => p.fmt(f)
                 };
@@ -124,7 +138,7 @@ impl fmt::Display for BBoard {
 
 #[derive(Debug)]
 pub struct Pos {
-    pub board: BBoard,
+    pub board: Board,
     pub turn: Color,
     pub history: Vec<Move>,
     pub castling_rights: Option<Castling>,
@@ -137,7 +151,7 @@ impl Pos {
         Pos {
             turn: White,
             history: Vec::new(),
-            board: BBoard::empty(),
+            board: Board::empty(),
             moves: 0,
             halfmoves: 0,
             castling_rights: None
@@ -164,7 +178,8 @@ impl Pos {
         let s = String::new();
         for r in (0..8).rev() {
             for c in 0..8 {
-                let p = self.board.get(BitBoard(1 << (r*8 + c)));
+                let sq = BitBoard::from_square(r*8 + c);
+                let p = self.board.get(sq);
             }
         }
         s
@@ -184,7 +199,7 @@ impl Pos {
         let mut col = 0;
         for c in board.chars() {
             let idx = row * 8 + col;
-            let sq = if col < 8 { BitBoard(1 << idx) } else {BitBoard(0)};
+            let sq = if col < 8 { BitBoard::from_square(idx) } else { BitBoard::empty() };
             col += 1;
             match c {
                 'P' => { pos.board.set(sq, Pc(White, Pawn)); },
@@ -241,14 +256,14 @@ impl Pos {
                 self.board.clear(fr);
             }
         }
-        self.history.push(mv);
+        // self.history.push(mv);
 
         //if let Pc(_, Pawn) = mv.piece { self.halfmoves = 0; }
         //if let Some(_) = mv.capture { self.halfmoves = 0; }
     }
 
     pub fn unmake_move(&mut self, mv: Move) {
-        self.history.pop();
+        // self.history.pop();
         self.turn = self.turn.other();
         if self.turn == Black { self.moves -= 1; }
         self.halfmoves -= 1;

@@ -44,8 +44,7 @@ fn main() {
                 game = Pos::from_fen(&fen_str);
                 println!("{}", game);
                 for mv in line.split(" ").skip(9) {
-                    let mv = Move::from_str(&game, mv);
-
+                    let mv = Move::from_str(&game, mv).unwrap();
                     game.make_move(mv);
                 }
             }
@@ -56,7 +55,7 @@ fn main() {
                 let _ = split.next();
                 if Some("moves") == split.next() {
                     for m in split {
-                        let mv = Move::from_str(&game, m);
+                        let mv = Move::from_str(&game, m).unwrap();
                         game.make_move(mv);
                     }
                 }
