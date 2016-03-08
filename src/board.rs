@@ -127,7 +127,7 @@ pub struct Pos {
     pub board: BBoard,
     pub turn: Color,
     pub history: Vec<Move>,
-    pub castling_rights: Castling,
+    pub castling_rights: Option<Castling>,
     pub moves: usize,
     pub halfmoves: usize
 }
@@ -140,7 +140,7 @@ impl Pos {
             board: BBoard::empty(),
             moves: 0,
             halfmoves: 0,
-            castling_rights: Castling::all()
+            castling_rights: None
         }
     }
 
@@ -213,7 +213,7 @@ impl Pos {
             "b" => Black,
             _ => panic!("invalid fen string")
         };
-        pos.castling_rights = Castling::from_str(castling);
+        pos.castling_rights = None;
         pos.halfmoves = halfmoves.parse::<usize>().unwrap();
         pos.moves = moves.parse::<usize>().unwrap();
         pos
@@ -231,6 +231,15 @@ impl Pos {
         match mv.promotion {
             None =>    { self.board.set(mv.to, mv.piece); },
             Some(p) => { self.board.set(mv.to, p); }
+        }
+        match mv.castling {
+            None => {},
+            Some(cst) => {
+                let (fr, to) = cst.get_rook_move();
+                let p = self.board.get(fr).unwrap();
+                self.board.set(to, p);
+                self.board.clear(fr);
+            }
         }
         self.history.push(mv);
 
@@ -339,7 +348,7 @@ impl fmt::Display for Pos {
         }
 
         write!(f, "\n\n");
-        write!(f, "       {:?}    {:4}", self.turn, self.castling_rights);
+        write!(f, "       {:?}    {:?}", self.turn, self.castling_rights);
 
         write!(f, "{}\n", self.board);
         //write!(f, "\n}}");

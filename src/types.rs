@@ -6,12 +6,12 @@ use self::Color::*;
 use bitboard::BitBoard;
 use board::Pos;
 
-
 #[derive(Eq, PartialEq, Ord, PartialOrd, Copy, Clone, Debug)]
 pub enum Color {
     White = 0,
     Black = 6,
 }
+
 impl Color {
     pub fn other(self) -> Color {
         match self {
@@ -64,6 +64,7 @@ pub struct Move {
     pub promotion: Option<Pc>,
     pub castling: Option<Castling>,
 }
+
 impl Move {
     pub fn from_str(pos: &Pos, s: &str) -> Move {
         let fr_str: String = s.chars().take(2).collect();
@@ -87,13 +88,23 @@ impl Move {
             }
         };
 
+        let fr = BitBoard::from_str(&fr_str);
+        let to = BitBoard::from_str(&to_str);
+
+        let mut castling = None;
+        // if let Pc(_, King) = pc {
+        //     if let Some(cst) = Castling::from_square(to) {
+        //         castling = Some(cst);
+        //     }
+        // }
+
         Move {
-            from: BitBoard::from_str(&fr_str),
-            to: BitBoard::from_str(&to_str),
+            from: fr,
+            to: to,
             piece: pc,
             capture: pos.board.get(BitBoard::from_str(&to_str)),
             promotion: pr_type,
-            castling: None,
+            castling: castling,
         }
     }
 
@@ -126,14 +137,14 @@ impl Move {
 
 impl fmt::Display for Move {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if let Some(castling) = self.castling {
-            if castling.intersects(WHITE_KINGSIDE | BLACK_KINGSIDE) {
-                write!(f, "O-O");
-            }
-            if castling.intersects(WHITE_QUEENSIDE | BLACK_QUEENSIDE) {
-                write!(f, "O-O-O");
-            }
-        } else {
+        // if let Some(castling) = self.castling {
+            // if castling.intersects(WHITE_KINGSIDE | BLACK_KINGSIDE) {
+            //     write!(f, "O-O");
+            // }
+            // if castling.intersects(WHITE_QUEENSIDE | BLACK_QUEENSIDE) {
+            //     write!(f, "O-O-O");
+            // }
+        {
             write!(f,
                    "{}{} → {}",
                    self.piece,
@@ -153,45 +164,50 @@ impl fmt::Display for Move {
     }
 }
 
-bitflags! {
-    pub flags Castling: usize {
-        const WHITE_KINGSIDE  = 0b0001,
-        const WHITE_QUEENSIDE = 0b0010,
-        const BLACK_KINGSIDE  = 0b0100,
-        const BLACK_QUEENSIDE = 0b1000
-    }
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Castling {
+    WhiteKingside,
+    WhiteQueenside,
+    BlackKingside,
+    BlackQueenside
 }
-
 impl Castling {
-    pub fn from_str(s: &str) -> Self {
-        let mut rights = Castling::empty();
+    pub fn from_str(s: &str) -> u8 {
+        let mut rights = 0;
         for c in s.chars() {
             match c {
-                'K' => rights = rights | WHITE_KINGSIDE,
-                'Q' => rights = rights | WHITE_QUEENSIDE,
-                'k' => rights = rights | BLACK_KINGSIDE,
-                'q' => rights = rights | BLACK_QUEENSIDE,
+                'K' => rights = rights | Castling::WhiteKingside as u8,
+                'Q' => rights = rights | Castling::WhiteQueenside as u8,
+                'k' => rights = rights | Castling::BlackKingside as u8,
+                'q' => rights = rights | Castling::BlackQueenside as u8,
                 _ => {}
             }
         }
         rights
     }
+
+    fn empty_pattern(self) -> BitBoard {
+        match self {
+            Castling::WhiteKingside  => BitBoard(0x0000_0000_0000_0060),
+            Castling::WhiteQueenside => BitBoard(0x0000_0000_0000_000e),
+            Castling::BlackKingside  => BitBoard(0x6000_0000_0000_0000),
+            Castling::BlackQueenside => BitBoard(0x0e00_0000_0000_0000),
+        }
+    }
+
+    pub fn get_rook_move(self) -> (BitBoard, BitBoard) {
+        (BitBoard(0), BitBoard(0))
+        // match self {
+        //     WHITE_KINGSIDE => (BitBoard(1 << 7), BitBoard(1 << 5)),
+        //     WHITE_QUEENSIDE => (BitBoard(1 << 0), BitBoard(1 << 3)),
+        //     BLACK_KINGSIDE => (BitBoard(1 << 63), BitBoard(1 << 61)),
+        //     BLACK_QUEENSIDE => (BitBoard(1 << 56), BitBoard(1 << 59)),
+        // }
+    }
 }
 
 impl fmt::Display for Castling {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if self.contains(WHITE_KINGSIDE) {
-            write!(f, "K");
-        }
-        if self.contains(WHITE_QUEENSIDE) {
-            write!(f, "Q");
-        }
-        if self.contains(BLACK_KINGSIDE) {
-            write!(f, "k");
-        }
-        if self.contains(BLACK_QUEENSIDE) {
-            write!(f, "q");
-        }
         Ok(())
     }
 }

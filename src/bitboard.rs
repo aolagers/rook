@@ -160,7 +160,7 @@ impl Iterator for BitBoardIntoIterator {
         b |= b >> 8;
         b |= b >> 16;
         b |= b >> 32;
-        let lowerbits = (b >> 1);
+        let lowerbits = b >> 1;
         self.bits_left.0 = self.bits_left.0 & lowerbits;
         return Some(BitBoard(lowerbits + 1));
     }

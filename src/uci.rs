@@ -1,25 +1,13 @@
 #![allow(unused_must_use)]
 
-#[macro_use]
-extern crate bitflags;
+extern crate rook;
 
-#[macro_use]
-extern crate lazy_static;
+use rook::board::Pos;
+use rook::types::{Move};
 
-mod bitboard;
-mod eval;
-mod types;
-mod movegenerator;
-mod board;
-
-
-use std::io::prelude::*;
-use std::io;
 use std::fs::File;
-
-use board::Pos;
-use types::Move;
-
+use std::io;
+use std::io::prelude::*;
 
 fn main() {
     let mut game = Pos::start();

@@ -4,11 +4,12 @@
 
 #[macro_use]
 extern crate bitflags;
+
 #[macro_use]
 extern crate lazy_static;
+
 extern crate rand;
 extern crate ansi_term;
-// extern crate test;
 extern crate time;
 
 use time::PreciseTime;
@@ -29,8 +30,6 @@ use types::Color::*;
 
 use board::Pos;
 
-// use rand::Rng;
-
 #[test]
 fn perft1() {
     let mut game1 = Pos::start();
@@ -40,7 +39,6 @@ fn perft1() {
     assert_eq!(game1.perft(3), 8902);
     //assert_eq!(game1.perft(4), 197281);
     //assert_eq!(game1.perft(5), 4865609);
-
 }
 
 #[test]
@@ -62,7 +60,6 @@ fn perft3() {
     assert_eq!(game2.perft(3), 97862);
     assert_eq!(game2.perft(4), 4085603);
     assert_eq!(game2.perft(5), 193690690);
-
 }
 
 #[test]
@@ -80,7 +77,6 @@ fn dont_move_making_discovered_check() {
     assert_eq!(best_move, None);
 }
 
-
 #[test]
 fn is_checkmate() {
     let game = Pos::from_fen("3r2k1/ppp2ppr/8/8/8/P4n1P/2P3q1/4K3 w KQkq - 0 1");
@@ -96,8 +92,9 @@ fn pawn_double_start() {
 fn main() {
     let yel = ansi_term::Colour::Red;
     let bold = yel.bold();
-    //let mut game = Pos::start();
-    let mut game = Pos::from_fen("8/8/1PP3k1/8/8/5pp1/1K6/8 w - - 0 1");
+    // let mut game = Pos::start();
+    let mut game = Pos::from_fen("k7/8/8/8/8/8/8/R3K2R w KQkq - 0 1");
+    // let mut game = Pos::from_fen("8/8/1PP3k1/8/8/5pp1/1K6/8 w - - 0 1");
     // let mut game = Pos::from_fen("8/8/8/8/8/ppp5/2p5/K7 w KQkq - 0 1");
     // let mut game = Pos::from_fen("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
     // let mut game = Pos::from_fen("P7/P7/P7/P7/P7/P7/P6r/KP5r w KQkq - 0 1");
@@ -106,9 +103,9 @@ fn main() {
     // let mut game = Pos::from_fen("8/p7/8/8/8/8/7P/8 w KQkq - 0 1");
 
 
-    //for m in movegenerator::generate_legal_moves(&game) {
+    // for m in movegenerator::generate_legal_moves(&game) {
     //    println!("{}", m);
-    //}
+    // }
 
     while true {
         println!("{}", game);
@@ -146,6 +143,10 @@ fn main() {
 
         } else {
             let legals = movegenerator::generate_legal_moves(&game);
+
+            for l in legals.iter() {
+                // println!("{}", l);
+            }
 
             let ok = false;
             let mut mv = None;

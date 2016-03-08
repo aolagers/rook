@@ -7,6 +7,7 @@ use types::Color::*;
 use types::PieceType::*;
 use bitboard::BitBoard;
 
+use types::Castling;
 
 pub fn generate_legal_moves(pos: &Pos) -> Vec<Move> {
     let mut p2 = pos.duplicate();
@@ -137,7 +138,27 @@ fn king_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
             });
         }
         threatens = threatens | possible_mvs;
+
+        // castling
+        //
+        // if pos.turn == White {
+        //     let ks =
+        //         pos.castling_rights.contains(WHITE_KINGSIDE) &&
+        //         (pos.board.occupied & castling_pattern(WHITE_KINGSIDE)).is_empty();
+        //     if ks {
+        //         let to = k.right().right();
+        //         moves.push(Move {
+        //             from: k,
+        //             to: to,
+        //             piece: Pc(pos.turn, King),
+        //             capture: pos.board.get(to),
+        //             promotion: None,
+        //             castling: Some(WHITE_KINGSIDE),
+        //         });
+        //     }
+        // }
     }
+
     threatens
 }
 
