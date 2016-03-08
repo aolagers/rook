@@ -64,25 +64,26 @@ impl Board {
 
     /// Get the piece on a given square
     pub fn get(&self, sq: BitBoard) -> Option<Pc> {
-        let mut found = None;
-        for (idx, bb) in self.pieces.iter().enumerate() {
-            if (*bb & sq).is_not_empty() {
-                let color = if idx / 6 == 0 { White } else { Black };
-                let kind = match idx % 6 {
-                    0 => Pawn,
-                    1 => Knight,
-                    2 => Bishop,
-                    3 => Rook,
-                    4 => Queen,
-                    5 => King,
-                    _ => panic!("invalid piece type")
-                };
-
-                found = Some(Pc (color, kind));
-            }
+        debug_assert!(sq.count_bits() == 1);
+        if (sq & self.occupied).is_empty() {
+            return None;
         }
-
-        return found;
+        if (sq & self.whites).is_empty() {
+            if (sq & self.pieces[6]).is_not_empty()  { return Some(Pc(Black, Pawn)); }
+            if (sq & self.pieces[7]).is_not_empty()  { return Some(Pc(Black, Knight)); }
+            if (sq & self.pieces[8]).is_not_empty()  { return Some(Pc(Black, Bishop)); }
+            if (sq & self.pieces[9]).is_not_empty()  { return Some(Pc(Black, Rook)); }
+            if (sq & self.pieces[10]).is_not_empty()  { return Some(Pc(Black, Queen)); }
+            if (sq & self.pieces[11]).is_not_empty()  { return Some(Pc(Black, King)); }
+        } else {
+            if (sq & self.pieces[0]).is_not_empty()  { return Some(Pc(White, Pawn)); }
+            if (sq & self.pieces[1]).is_not_empty()  { return Some(Pc(White, Knight)); }
+            if (sq & self.pieces[2]).is_not_empty()  { return Some(Pc(White, Bishop)); }
+            if (sq & self.pieces[3]).is_not_empty()  { return Some(Pc(White, Rook)); }
+            if (sq & self.pieces[4]).is_not_empty()  { return Some(Pc(White, Queen)); }
+            if (sq & self.pieces[5]).is_not_empty()  { return Some(Pc(White, King)); }
+        };
+        panic!("invalid board!");
     }
 
     /// Get a BitBoard the positions of all pieces of this type

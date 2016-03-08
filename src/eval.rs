@@ -106,14 +106,42 @@ fn base_value(p: Pc) -> i64 {
 pub fn evaluate(pos: &Pos) -> i64 {
     let mut score = 0;
     //let mut sq = 1 << 63;
-    for i in 0..64 {
-        match pos.board.get(BitBoard::from_square(i)) {
-            Some(p) => {
-                score = score + base_value(p) + bonus(p, i);
-            }
-            None => {}
-        }
+    for w in pos.board.whites {
+        let Pc(_, t) = pos.board.get(w).unwrap();
+        let sq_num = w.largets_bit() - 1;
+        let idx = (7-(sq_num/8))*8 + sq_num % 8; // index backwards for white
+        let pc_val = BASE_VALUES[t as usize] + match t {
+            Pawn => PAWN[idx],
+            Knight => KNIGHT[idx],
+            Bishop => BISHOP[idx],
+            Rook => ROOK[idx],
+            Queen => QUEEN[idx],
+            King => KING[idx]
+        };
+        score += pc_val;
     }
+    for b in pos.board.blacks {
+        let Pc(_, t) = pos.board.get(b).unwrap();
+        let sq_num = b.largets_bit() - 1;
+        let idx = sq_num;
+        let pc_val = BASE_VALUES[t as usize] + match t {
+            Pawn => PAWN[idx],
+            Knight => KNIGHT[idx],
+            Bishop => BISHOP[idx],
+            Rook => ROOK[idx],
+            Queen => QUEEN[idx],
+            King => KING[idx]
+        };
+        score -= pc_val;
+    }
+    // for i in 0..64 {
+    //     match pos.board.get(BitBoard::from_square(i)) {
+    //         Some(p) => {
+    //             score = score + base_value(p) + bonus(p, i);
+    //         }
+    //         None => {}
+    //     }
+    // }
 /*
     for (i, p) in self.board.board.iter().enumerate() {
         if let P(c, t) = *p {
