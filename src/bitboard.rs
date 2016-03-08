@@ -74,6 +74,10 @@ impl BitBoard {
         cnt
     }
 
+    pub fn count_ones(&self) -> u32 {
+        self.0.count_ones()
+    }
+
     pub fn to_str(&self) -> String {
         debug_assert!(self.count_bits() == 1);
         let lb = self.largets_bit() - 1;

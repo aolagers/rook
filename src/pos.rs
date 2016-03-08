@@ -10,6 +10,7 @@ use types::PieceType::*;
 use movegenerator;
 use eval;
 use board::Board;
+use hash;
 
 #[derive(Debug)]
 pub struct Pos {
@@ -127,6 +128,8 @@ impl Pos {
 
         //if let Pc(_, Pawn) = mv.piece { self.halfmoves = 0; }
         //if let Some(_) = mv.capture { self.halfmoves = 0; }
+
+        // hash::full_hash(self);
     }
 
     pub fn unmake_move(&mut self, mv: Move) {

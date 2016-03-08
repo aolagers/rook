@@ -52,9 +52,11 @@ fn main() {
     let mut totaltime = 0;
     let mut totalnodes = 0;
 
+    //println!("{:?}", hash::HASH);
+
     loop {
         println!("{}     eval: {}", game, eval::evaluate(&game));
-        println!("{}", hash::full_hash(&game));
+        //println!("{}", hash::full_hash(&game));
 
         if (game.turn == Black) || !human {
             println!("\nthinking... ");

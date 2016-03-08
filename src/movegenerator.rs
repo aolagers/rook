@@ -296,9 +296,3 @@ impl Index<BitBoard> for [BitBoard] {
         &self[ib.largets_bit() - 1]
     }
 }
-
-// use test::Bencher;
-
-// #[bench]
-// fn bench_movegen() {
-// }
