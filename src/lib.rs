@@ -9,7 +9,7 @@ extern crate bitflags;
 #[macro_use]
 extern crate lazy_static;
 extern crate rand;
-extern crate ansi_term;
+// extern crate ansi_term;
 // extern crate test;
 extern crate time;
 
