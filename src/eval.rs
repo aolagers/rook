@@ -104,6 +104,7 @@ fn base_value(p: Pc) -> i64 {
 }
 
 pub fn evaluate(pos: &Pos) -> i64 {
+    //return 0;
     let mut score = 0;
     //let mut sq = 1 << 63;
     for w in pos.board.whites {

@@ -108,6 +108,14 @@ fn main() {
     let human = false;
     let min_think = 0;
 
+    let mut totaltime = 0;
+    let mut totalnodes = 0;
+
+    let bb = BitBoard::new(0b11);
+    for b in bb {
+        println!("{}", b);
+    }
+
     while true {
         println!("{}     eval: {}", game, eval::evaluate(&game));
 
@@ -123,6 +131,8 @@ fn main() {
             let (_, nodes, best_move) = game.negamax_start(depth);
             let end = PreciseTime::now();
             let dur = start.to(end);
+            totaltime += dur.num_milliseconds();
+            totalnodes += nodes;
             let tl = (min_think as i32 - dur.num_milliseconds() as i32);
             if tl > 0 { std::thread::sleep_ms(tl as u32); }
 
@@ -130,6 +140,10 @@ fn main() {
                      nodes,
                      dur.num_milliseconds() as f64 / 1000.0,
                      nodes as f64 / dur.num_milliseconds() as f64);
+            println!("{:6.0} knodes in {:2.2} s {:3.2} knps",
+                  totalnodes as f64 / 1000.0,
+                  totaltime as f64 / 1000.0,
+                  totalnodes as f64 / totaltime as f64);
 
             match best_move {
                 Some(mv) => {

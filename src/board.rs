@@ -64,25 +64,31 @@ impl Board {
 
     /// Get the piece on a given square
     pub fn get(&self, sq: BitBoard) -> Option<Pc> {
-        debug_assert!(sq.count_bits() == 1);
-        if (sq & self.occupied).is_empty() {
-            return None;
+        if (sq.count_bits() != 1) {
+            println!("{}", sq);
         }
-        if (sq & self.whites).is_empty() {
-            if (sq & self.pieces[6]).is_not_empty()  { return Some(Pc(Black, Pawn)); }
-            if (sq & self.pieces[7]).is_not_empty()  { return Some(Pc(Black, Knight)); }
-            if (sq & self.pieces[8]).is_not_empty()  { return Some(Pc(Black, Bishop)); }
-            if (sq & self.pieces[9]).is_not_empty()  { return Some(Pc(Black, Rook)); }
-            if (sq & self.pieces[10]).is_not_empty()  { return Some(Pc(Black, Queen)); }
-            if (sq & self.pieces[11]).is_not_empty()  { return Some(Pc(Black, King)); }
-        } else {
-            if (sq & self.pieces[0]).is_not_empty()  { return Some(Pc(White, Pawn)); }
-            if (sq & self.pieces[1]).is_not_empty()  { return Some(Pc(White, Knight)); }
-            if (sq & self.pieces[2]).is_not_empty()  { return Some(Pc(White, Bishop)); }
-            if (sq & self.pieces[3]).is_not_empty()  { return Some(Pc(White, Rook)); }
-            if (sq & self.pieces[4]).is_not_empty()  { return Some(Pc(White, Queen)); }
-            if (sq & self.pieces[5]).is_not_empty()  { return Some(Pc(White, King)); }
-        };
+        debug_assert!(sq.count_bits() == 1);
+
+        if (sq & self.occupied).is_empty() { return None; }
+
+        if (sq & self.pieces[0]).is_not_empty()  { return Some(Pc(White, Pawn)); }
+        if (sq & self.pieces[6]).is_not_empty()  { return Some(Pc(Black, Pawn)); }
+
+        if (sq & self.pieces[1]).is_not_empty()  { return Some(Pc(White, Knight)); }
+        if (sq & self.pieces[7]).is_not_empty()  { return Some(Pc(Black, Knight)); }
+
+        if (sq & self.pieces[2]).is_not_empty()  { return Some(Pc(White, Bishop)); }
+        if (sq & self.pieces[8]).is_not_empty()  { return Some(Pc(Black, Bishop)); }
+
+        if (sq & self.pieces[3]).is_not_empty()  { return Some(Pc(White, Rook)); }
+        if (sq & self.pieces[9]).is_not_empty()  { return Some(Pc(Black, Rook)); }
+
+        if (sq & self.pieces[5]).is_not_empty()  { return Some(Pc(White, King)); }
+        if (sq & self.pieces[11]).is_not_empty() { return Some(Pc(Black, King)); }
+
+        if (sq & self.pieces[4]).is_not_empty()  { return Some(Pc(White, Queen)); }
+        if (sq & self.pieces[10]).is_not_empty() { return Some(Pc(Black, Queen)); }
+
         panic!("invalid board!");
     }
 

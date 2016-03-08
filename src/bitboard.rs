@@ -158,30 +158,37 @@ impl IntoIterator for BitBoard {
     type Item = BitBoard;
     type IntoIter = BitBoardIntoIterator;
     fn into_iter(self) -> Self::IntoIter {
-        BitBoardIntoIterator { bits_left: self }
+        BitBoardIntoIterator { bits_left: self.0 }
     }
 }
 
 pub struct BitBoardIntoIterator {
-    bits_left: BitBoard,
+    bits_left: u64,
 }
 
 impl Iterator for BitBoardIntoIterator {
     type Item = BitBoard;
     fn next(&mut self) -> Option<BitBoard> {
-        let mut b = self.bits_left.0;
-        if b == 0 {
-            return None;
-        }
-        b |= b >> 1;
-        b |= b >> 2;
-        b |= b >> 4;
-        b |= b >> 8;
-        b |= b >> 16;
-        b |= b >> 32;
-        let lowerbits = b >> 1;
-        self.bits_left.0 = self.bits_left.0 & lowerbits;
-        return Some(BitBoard(lowerbits + 1));
+        if self.bits_left == 0 { return None; }
+        let lsb = self.bits_left.trailing_zeros();
+        let sw = 63 - lsb;
+        let r = BitBoard((self.bits_left << sw) >> sw);
+        self.bits_left = self.bits_left & self.bits_left - 1;
+        Some(r)
+
+        // let mut b = self.bits_left;
+        // if b == 0 {
+        //     return None;
+        // }
+        // b |= b >> 1;
+        // b |= b >> 2;
+        // b |= b >> 4;
+        // b |= b >> 8;
+        // b |= b >> 16;
+        // b |= b >> 32;
+        // let lowerbits = b >> 1;
+        // self.bits_left = self.bits_left & lowerbits;
+        // return Some(BitBoard(lowerbits + 1));
     }
 }
 
