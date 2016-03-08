@@ -10,6 +10,30 @@ use rook::types::Color::*;
 extern crate time;
 use time::PreciseTime;
 
+use std::io;
+use std::io::Write;
+use std::process;
+
+fn move_from_input(pos: &Pos) -> Move {
+    loop {
+        print!("{:?}> ", pos.turn);
+        std::io::stdout().flush();
+        let mut input = String::new();
+        io::stdin().read_line(&mut input);
+        if input.trim() == "q" || input.trim() == "quit" {
+            println!("\nbye");
+            process::exit(0);
+        }
+        let mv = Move::from_str(pos, input.trim());
+        match mv {
+            Some(m) => { return m; },
+            None => {
+                println!("Invalid move: '{}'. Type 'q' to quit.", input.trim());
+            }
+        }
+    }
+}
+
 fn main() {
     // let yel = ansi_term::Colour::Red;
     // let bold = yel.bold();
@@ -24,7 +48,7 @@ fn main() {
 
     // for m in movegenerator::generate_legal_moves(&game) { println!("{}", m); }
 
-    let human = false;
+    let human = true;
     let min_think = 0;
 
     let mut totaltime = 0;
@@ -33,7 +57,7 @@ fn main() {
     //println!("{:?}", hash::HASH);
 
     loop {
-        println!("{}     eval: {}", game, eval::evaluate(&game));
+        println!("{}     eval: {}\n", game, eval::evaluate(&game));
         //println!("{}", hash::full_hash(&game));
 
         if (game.turn == Black) || !human {
@@ -81,13 +105,14 @@ fn main() {
             let mut ok = false;
 
             while !ok {
-                let m = Move::from_input(&game);
+                let m = move_from_input(&game);
                 for lm in legals.iter() {
                     if *lm == m {
                         ok = true;
                         mv = Some(m);
                     }
                 }
+                if !ok {println!("Move not legal");}
             }
 
             game.make_move(mv.unwrap());

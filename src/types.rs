@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 
 use std::fmt;
-use std::io::{self, Read};
 
 use self::PieceType::*;
 use self::Color::*;
@@ -142,21 +141,6 @@ impl Move {
         })
     }
 
-    pub fn from_input(pos: &Pos) -> Move {
-        loop {
-            println!("> ");
-            let mut input = String::new();
-            io::stdin().read_line(&mut input);
-            let mv = Move::from_str(pos, input.trim());
-            match mv {
-                Some(m) => { return m; },
-                None => {
-                    println!("Invalid move: '{}'", input.trim());
-                }
-            }
-        }
-    }
-
     pub fn to_str(&self) -> String {
         let promo_str = match self.promotion {
             None => "",
@@ -279,7 +263,7 @@ impl CastlingMove {
         }
         flg
     }
-    
+
     pub fn flags_to_str(f: u8) -> String {
         if f == 0 { return "-".to_string(); }
         let mut s = String::new();

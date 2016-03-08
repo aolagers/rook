@@ -2,7 +2,7 @@
 
 use std::fmt;
 use std::cmp;
-use std::collections::HashSet;
+// use std::collections::HashSet;
 
 use bitboard::BitBoard;
 use types::{Pc, Color, Move, CastlingMove};
@@ -126,7 +126,7 @@ impl Pos {
                 self.board.clear(fr);
             }
         }
-        // self.history.push(mv);
+        self.history.push(mv);
 
         //if let Pc(_, Pawn) = mv.piece { self.halfmoves = 0; }
         //if let Some(_) = mv.capture { self.halfmoves = 0; }
@@ -135,7 +135,7 @@ impl Pos {
     }
 
     pub fn unmake_move(&mut self, mv: Move) {
-        // self.history.pop();
+        self.history.pop();
         self.turn = self.turn.other();
         if self.turn == Black { self.moves -= 1; }
         self.halfmoves -= 1;

@@ -4,8 +4,8 @@
 
 //! Global comments for rook chess engine core
 
-#[macro_use]
-extern crate bitflags;
+// #[macro_use]
+// extern crate bitflags;
 #[macro_use]
 extern crate lazy_static;
 extern crate rand;
