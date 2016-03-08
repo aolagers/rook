@@ -22,7 +22,7 @@ impl BitBoard {
     pub fn is_empty(&self) -> bool {
         self.0 == 0
     }
-    pub fn is_not_empty(&self) -> bool {
+    pub fn has_bits(&self) -> bool {
         self.0 != 0
     }
 
@@ -144,20 +144,6 @@ impl Iterator for BitBoardIntoIterator {
         let r = BitBoard((self.bits_left << sw) >> sw);
         self.bits_left = self.bits_left & self.bits_left - 1;
         Some(r)
-
-        // let mut b = self.bits_left;
-        // if b == 0 {
-        //     return None;
-        // }
-        // b |= b >> 1;
-        // b |= b >> 2;
-        // b |= b >> 4;
-        // b |= b >> 8;
-        // b |= b >> 16;
-        // b |= b >> 32;
-        // let lowerbits = b >> 1;
-        // self.bits_left = self.bits_left & lowerbits;
-        // return Some(BitBoard(lowerbits + 1));
     }
 }
 

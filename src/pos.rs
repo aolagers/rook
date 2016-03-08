@@ -2,9 +2,10 @@
 
 use std::fmt;
 use std::cmp;
+use std::collections::HashSet;
 
 use bitboard::BitBoard;
-use types::{Pc, Color, Move, Castling};
+use types::{Pc, Color, Move, CastlingMove};
 use types::Color::*;
 use types::PieceType::*;
 use movegenerator;
@@ -17,7 +18,7 @@ pub struct Pos {
     pub board: Board,
     pub turn: Color,
     pub history: Vec<Move>,
-    pub castling_rights: Option<Castling>,
+    pub castling_rights: u8,
     pub moves: usize,
     pub halfmoves: usize,
     pub hash: u64
@@ -31,7 +32,7 @@ impl Pos {
             board: Board::empty(),
             moves: 0,
             halfmoves: 0,
-            castling_rights: None,
+            castling_rights: 0b1111,
             hash: 0,
         }
     }
@@ -58,7 +59,7 @@ impl Pos {
         let mut parts = s.split(" ");
         let board = parts.next().unwrap();
         let turn = parts.next().unwrap();
-        let _castling = parts.next().unwrap();
+        let castling = parts.next().unwrap();
         let _passant = parts.next().unwrap();
         let halfmoves = parts.next().unwrap();
         let moves = parts.next().unwrap();
@@ -96,7 +97,8 @@ impl Pos {
             "b" => Black,
             _ => panic!("invalid fen string")
         };
-        pos.castling_rights = None;
+
+        pos.castling_rights = CastlingMove::str_to_flags(castling);
         pos.halfmoves = halfmoves.parse::<usize>().unwrap();
         pos.moves = moves.parse::<usize>().unwrap();
         pos
@@ -239,7 +241,7 @@ impl fmt::Display for Pos {
         }
 
         write!(f, "\n\n");
-        write!(f, "       {:?}    {:?}", self.turn, self.castling_rights);
+        write!(f, "       {:?}    {}", self.turn, CastlingMove::flags_to_str(self.castling_rights));
 
         write!(f, "{}\n", self.board);
         //write!(f, "\n}}");

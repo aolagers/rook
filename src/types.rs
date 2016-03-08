@@ -82,7 +82,8 @@ pub struct Move {
     pub capture: Option<Pc>,
     /// If this is a promoting move, contains the type of the new piece.
     pub promotion: Option<Pc>,
-    pub castling: Option<Castling>,
+    /// If this a castling, contain the type
+    pub castling: Option<CastlingMove>,
 }
 
 impl Move {
@@ -124,12 +125,12 @@ impl Move {
             }
         };
 
-        // let mut castling = None;
-        // if let Pc(_, King) = pc {
-        //     if let Some(cst) = Castling::from_square(to) {
-        //         castling = Some(cst);
-        //     }
-        // }
+        let mut castling = None;
+        if let Pc(_, King) = pc {
+             if let Some(cst) = CastlingMove::from_squares(fr | to) {
+                castling = Some(cst);
+            }
+        }
 
         Some(Move {
             from: fr,
@@ -137,7 +138,7 @@ impl Move {
             piece: pc,
             capture: pos.board.get(to),
             promotion: pr_type,
-            castling: None,
+            castling: castling,
         })
     }
 
@@ -203,43 +204,90 @@ impl fmt::Display for Move {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Castling {
-    WhiteKingside,
-    WhiteQueenside,
-    BlackKingside,
-    BlackQueenside
+pub enum CastlingMove {
+    WhiteKingside   = 0b0001,
+    WhiteQueenside  = 0b0010,
+    BlackKingside   = 0b0100,
+    BlackQueenside  = 0b1000
 }
-impl Castling {
-    pub fn from_str(s: &str) -> u8 {
-        let mut rights = 0;
+
+use self::CastlingMove::*;
+
+impl CastlingMove {
+
+    pub fn empty_pattern(&self) -> BitBoard {
+        match *self {
+            WhiteKingside  => BitBoard::new(0x0000_0000_0000_0060),
+            WhiteQueenside => BitBoard::new(0x0000_0000_0000_000e),
+            BlackKingside  => BitBoard::new(0x6000_0000_0000_0000),
+            BlackQueenside => BitBoard::new(0x0e00_0000_0000_0000),
+        }
+    }
+
+    pub fn get_rook_move(&self) -> (BitBoard, BitBoard) {
+        match *self {
+            WhiteKingside  =>
+                (BitBoard::from_square(7), BitBoard::from_square(5)),
+            WhiteQueenside  =>
+                (BitBoard::from_square(0), BitBoard::from_square(3)),
+            BlackKingside  =>
+                (BitBoard::from_square(63), BitBoard::from_square(61)),
+            BlackQueenside  =>
+                (BitBoard::from_square(56), BitBoard::from_square(59)),
+        }
+    }
+
+    pub fn from_squares(sq: BitBoard) -> Option<CastlingMove> {
+        if sq == BitBoard::from_square(4) | BitBoard::from_square(6) {
+            return Some(WhiteKingside);
+        } else if sq == BitBoard::from_square(4) | BitBoard::from_square(2) {
+            return Some(WhiteQueenside);
+        } else if sq == BitBoard::from_square(60) | BitBoard::from_square(62) {
+            return Some(BlackQueenside);
+        } else if sq == BitBoard::from_square(60) | BitBoard::from_square(58) {
+            return Some(BlackQueenside);
+        } else {
+            return None;
+        }
+    }
+
+    pub fn to_char(&self) -> char {
+        match *self {
+            WhiteKingside  => 'K',
+            WhiteQueenside => 'Q',
+            BlackKingside  => 'k',
+            BlackQueenside => 'q',
+        }
+    }
+
+    pub fn from_char(c: char) -> Self {
+        match c {
+             'K' => WhiteKingside,
+             'Q' => WhiteQueenside,
+             'k' => BlackKingside,
+             'q' => BlackQueenside,
+             _   => panic!("invalid casling right!")
+        }
+    }
+
+    pub fn str_to_flags(s: &str) -> u8 {
+        let mut flg = 0;
         for c in s.chars() {
-            match c {
-                'K' => rights = rights | Castling::WhiteKingside as u8,
-                'Q' => rights = rights | Castling::WhiteQueenside as u8,
-                'k' => rights = rights | Castling::BlackKingside as u8,
-                'q' => rights = rights | Castling::BlackQueenside as u8,
-                _ => {}
+            if c == '-' { return 0; }
+
+            flg |= CastlingMove::from_char(c) as u8;
+        }
+        flg
+    }
+    
+    pub fn flags_to_str(f: u8) -> String {
+        if f == 0 { return "-".to_string(); }
+        let mut s = String::new();
+        for v in [WhiteKingside, WhiteQueenside, BlackKingside, BlackQueenside].iter() {
+            if (*v as u8 & f) != 0 {
+                s.push(v.to_char());
             }
         }
-        rights
-    }
-
-    fn empty_pattern(self) -> BitBoard {
-        match self {
-            Castling::WhiteKingside  => BitBoard::new(0x0000_0000_0000_0060),
-            Castling::WhiteQueenside => BitBoard::new(0x0000_0000_0000_000e),
-            Castling::BlackKingside  => BitBoard::new(0x6000_0000_0000_0000),
-            Castling::BlackQueenside => BitBoard::new(0x0e00_0000_0000_0000),
-        }
-    }
-
-    pub fn get_rook_move(self) -> (BitBoard, BitBoard) {
-        (BitBoard::empty(), BitBoard::empty())
-        // match self {
-        //     WHITE_KINGSIDE => (BitBoard(1 << 7), BitBoard(1 << 5)),
-        //     WHITE_QUEENSIDE => (BitBoard(1 << 0), BitBoard(1 << 3)),
-        //     BLACK_KINGSIDE => (BitBoard(1 << 63), BitBoard(1 << 61)),
-        //     BLACK_QUEENSIDE => (BitBoard(1 << 56), BitBoard(1 << 59)),
-        // }
+        s
     }
 }

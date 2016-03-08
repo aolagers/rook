@@ -16,7 +16,7 @@ pub fn generate_legal_moves(pos: &Pos) -> Vec<Move> {
     for m in allmoves {
         p2.make_move(m);
         let atk = generate_attack_map(&p2);
-        if (p2.board.pieces[pos.turn as usize + King as usize] & atk).is_not_empty() {
+        if (p2.board.pieces[pos.turn as usize + King as usize] & atk).has_bits() {
             // CHECK
         } else {
             legalmoves.push(m.clone());
@@ -73,7 +73,7 @@ fn pawn_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
         let possible_attacks = all_attacks & pos.board.theirs(pos.turn);
 
         for m in possible_moves | possible_attacks {
-            let prom = if (m & BitBoard::new(0xff00_0000_0000_00ff)).is_not_empty() {
+            let prom = if (m & BitBoard::new(0xff00_0000_0000_00ff)).has_bits() {
                 Some(Pc(pos.turn, Queen))
             } else {
                 None
@@ -193,7 +193,7 @@ fn ray_moves(pos: &Pos,
     for dp in diag_pieces {
         for f in direction_func.iter() {
             let mut to = f(&dp);
-            while to.is_not_empty() && (to & pos.board.mine(pos.turn)).is_empty() {
+            while to.has_bits() && (to & pos.board.mine(pos.turn)).is_empty() {
                 threatens = threatens | to;
                 if (to & pos.board.mine(pos.turn)).is_empty() {
                     let capt = pos.board.get(to);

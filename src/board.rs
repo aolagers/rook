@@ -72,23 +72,23 @@ impl Board {
 
         if (sq & self.occupied).is_empty() { return None; }
 
-        if (sq & self.pieces[0]).is_not_empty()  { return Some(Pc(White, Pawn)); }
-        if (sq & self.pieces[6]).is_not_empty()  { return Some(Pc(Black, Pawn)); }
+        if (sq & self.pieces[0]).has_bits()  { return Some(Pc(White, Pawn)); }
+        if (sq & self.pieces[6]).has_bits()  { return Some(Pc(Black, Pawn)); }
 
-        if (sq & self.pieces[1]).is_not_empty()  { return Some(Pc(White, Knight)); }
-        if (sq & self.pieces[7]).is_not_empty()  { return Some(Pc(Black, Knight)); }
+        if (sq & self.pieces[1]).has_bits()  { return Some(Pc(White, Knight)); }
+        if (sq & self.pieces[7]).has_bits()  { return Some(Pc(Black, Knight)); }
 
-        if (sq & self.pieces[2]).is_not_empty()  { return Some(Pc(White, Bishop)); }
-        if (sq & self.pieces[8]).is_not_empty()  { return Some(Pc(Black, Bishop)); }
+        if (sq & self.pieces[2]).has_bits()  { return Some(Pc(White, Bishop)); }
+        if (sq & self.pieces[8]).has_bits()  { return Some(Pc(Black, Bishop)); }
 
-        if (sq & self.pieces[3]).is_not_empty()  { return Some(Pc(White, Rook)); }
-        if (sq & self.pieces[9]).is_not_empty()  { return Some(Pc(Black, Rook)); }
+        if (sq & self.pieces[3]).has_bits()  { return Some(Pc(White, Rook)); }
+        if (sq & self.pieces[9]).has_bits()  { return Some(Pc(Black, Rook)); }
 
-        if (sq & self.pieces[5]).is_not_empty()  { return Some(Pc(White, King)); }
-        if (sq & self.pieces[11]).is_not_empty() { return Some(Pc(Black, King)); }
+        if (sq & self.pieces[5]).has_bits()  { return Some(Pc(White, King)); }
+        if (sq & self.pieces[11]).has_bits() { return Some(Pc(Black, King)); }
 
-        if (sq & self.pieces[4]).is_not_empty()  { return Some(Pc(White, Queen)); }
-        if (sq & self.pieces[10]).is_not_empty() { return Some(Pc(Black, Queen)); }
+        if (sq & self.pieces[4]).has_bits()  { return Some(Pc(White, Queen)); }
+        if (sq & self.pieces[10]).has_bits() { return Some(Pc(Black, Queen)); }
 
         panic!("invalid board!");
     }
