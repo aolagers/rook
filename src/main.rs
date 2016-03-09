@@ -38,7 +38,7 @@ fn main() {
     // let yel = ansi_term::Colour::Red;
     // let bold = yel.bold();
     let mut game = Pos::start();
-    // let mut game = Pos::from_fen("k7/8/8/8/8/8/8/R3K2R w KQkq - 0 1");
+    // let mut game = Pos::from_fen("8/8/8/8/8/8/8/RR4rr w KQkq - 0 1");
     // let mut game = Pos::from_fen("8/8/1PP3k1/8/8/5pp1/1K6/8 w - - 0 1");
     // let mut game = Pos::from_fen("8/8/8/8/8/ppp5/2p5/K7 w KQkq - 0 1");
     // let mut game = Pos::from_fen("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
@@ -48,7 +48,7 @@ fn main() {
 
     // for m in movegenerator::generate_legal_moves(&game) { println!("{}", m); }
 
-    let human = true;
+    let human = false;
     let min_think = 0;
 
     let mut totaltime = 0;
@@ -64,8 +64,8 @@ fn main() {
             println!("\nthinking... ");
 
             let depth = match game.turn {
-                Black => 5,
-                White => 2,
+                Black => 4,
+                White => 4,
             };
 
             let start = PreciseTime::now();

@@ -168,7 +168,7 @@ impl Pos {
         let mut nodes = 0;
 
         let lmoves = movegenerator::generate_legal_moves(self);
-
+        println!("first step");
         for m in lmoves {
             pos.make_move(m);
             let (score, n) = pos.negamax_iter(depth - 1);
@@ -186,7 +186,6 @@ impl Pos {
             for m in moves {
                 println!("{}", m);
             }
-
         }
         */
         (best_score, nodes, best_move)
@@ -194,13 +193,22 @@ impl Pos {
 
     fn negamax_iter(&mut self, depth: usize) -> (i64, usize) {
         if depth == 0 {
-            let score = eval::evaluate(self);
-            if self.turn == White {
-                return (score, 1);
+            let mut score = 0;
+            //let (capt, atks) = self.can_capture();
+            if false {
+                // let (score, qnodes) = self.quiescence(1, atks);
+                // println!("Q eval {} {}", qnodes, score);
+                // return (score, qnodes);
             } else {
-                return (-score, 1);
+                let score = eval::evaluate(self);
+                if self.turn == White {
+                    return (score, 1);
+                } else {
+                    return (-score, 1);
+                }
             }
         }
+
         let mut nodes = 0;
         let mut best_score = i64::min_value() + 1;
         let moves = movegenerator::generate_moves(self);
@@ -215,6 +223,49 @@ impl Pos {
         }
 
         (best_score, nodes)
+    }
+
+    fn quiescence(&mut self, depth: usize, atks: Vec<Move>) -> (i64, usize) {
+        if depth == 0 {
+            println!("Q bottomed out");
+            let score = eval::evaluate(self);
+            if self.turn == White {
+                return (score, 1);
+            } else {
+                return (-score, 1);
+            }
+        }
+
+        let mut s = 0;
+        let mut n = 0;
+
+        for &a in atks.iter() {
+            println!("\nprev {}", self.history.last().unwrap());
+            self.make_move(a);
+            let (capt, atks) = self.can_capture();
+            if capt {
+                //s, n = self.quiescence(depth - 1, atks);
+            } else {
+                println!("no more captures, e {}", s);
+                //s, n = self.quiescence(0, atks);
+            }
+            self.unmake_move(a);
+            // println!("Q {} {}", a, s);
+
+        }
+
+        (s, n)
+    }
+
+    fn can_capture(&self) -> (bool, Vec<Move>) {
+
+        let atks = movegenerator::generate_attack_moves(&self);
+        (!atks.is_empty(), atks)
+
+        // let (atk, moves) = movegenerator::generate_attack_map(&self);
+        // println!("atk map\n{}", (atk & self.board.theirs(self.turn)));
+        // let c = (atk & self.board.theirs(self.turn)).has_bits();
+        // (c, moves)
     }
 }
 

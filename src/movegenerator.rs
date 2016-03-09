@@ -15,7 +15,7 @@ pub fn generate_legal_moves(pos: &Pos) -> Vec<Move> {
 
     for m in allmoves {
         p2.make_move(m);
-        let atk = generate_attack_map(&p2);
+        let (atk, _) = generate_attack_map(&p2);
         if (p2.board.pieces[pos.turn as usize + King as usize] & atk).has_bits() {
             // CHECK
         } else {
@@ -41,7 +41,13 @@ pub fn generate_moves(pos: &Pos) -> Vec<Move> {
     moves
 }
 
-pub fn generate_attack_map(pos: &Pos) -> BitBoard {
+pub fn generate_attack_moves(pos: &Pos) -> Vec<Move> {
+    let mut attacks = generate_moves(pos);
+    attacks.retain(|mv| mv.capture.is_some());
+    attacks
+}
+
+pub fn generate_attack_map(pos: &Pos) -> (BitBoard, Vec<Move>) {
     let mut moves = Vec::new();
     let mut atk = pawn_moves(pos, &mut moves);
     atk = atk | knight_moves(pos, &mut moves);
@@ -50,7 +56,7 @@ pub fn generate_attack_map(pos: &Pos) -> BitBoard {
     atk = atk | queen_moves(pos, &mut moves);
     atk = atk | king_moves(pos, &mut moves);
 
-    atk
+    (atk, moves)
 }
 
 fn pawn_moves(pos: &Pos, moves: &mut Vec<Move>) -> BitBoard {
