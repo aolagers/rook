@@ -1,5 +1,9 @@
 
-# TODO
+![logo](logo/logo.png)
+
+# ROOK Chess
+
+## TODO
 
 * Castling
 * Quinnessence search
