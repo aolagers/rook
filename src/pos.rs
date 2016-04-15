@@ -152,7 +152,7 @@ impl Pos {
             return 1;
         }
         let mut nodes = 0;
-        let moves = movegenerator::generate_legal_moves(self);
+        let moves = movegenerator::legal_moves(self);
         for m in moves {
             self.make_move(m);
             nodes += self.perft(depth - 1);
@@ -167,8 +167,7 @@ impl Pos {
         let mut best_move = None;
         let mut nodes = 0;
 
-        let lmoves = movegenerator::generate_legal_moves(self);
-        println!("first step");
+        let lmoves = movegenerator::legal_moves(self);
         for m in lmoves {
             pos.make_move(m);
             let (score, n) = pos.negamax_iter(depth - 1);
@@ -182,7 +181,7 @@ impl Pos {
         /*
         if best_move == None {
             println!("no legal moves found. all moves:");
-            let moves = movegenerator::generate_moves(self);
+            let moves = movegenerator::all_moves(self);
             for m in moves {
                 println!("{}", m);
             }
@@ -193,7 +192,7 @@ impl Pos {
 
     fn negamax_iter(&mut self, depth: usize) -> (i64, usize) {
         if depth == 0 {
-            let mut score = 0;
+            // let score = 0;
             //let (capt, atks) = self.can_capture();
             if false {
                 // let (score, qnodes) = self.quiescence(1, atks);
@@ -211,8 +210,8 @@ impl Pos {
 
         let mut nodes = 0;
         let mut best_score = i64::min_value() + 1;
-        let moves = movegenerator::generate_moves(self);
-        for m in moves {
+        let moves = movegenerator::legal_moves(self);
+        for &m in moves.iter() {
             self.make_move(m);
             let (score, n) = self.negamax_iter(depth - 1);
             nodes += n;
@@ -221,6 +220,17 @@ impl Pos {
             }
             self.unmake_move(m);
         }
+        // if moves.len() == 0 {
+            // if depth % 2 == 0 {
+            // println!("{}", self);
+            // for z in movegenerator::all_moves(self) { println!("{}", z); }
+            // println!("CHECKMATE!");
+            // panic!("checkmate or stalemate");
+                // return (-100000, 1);
+            // } else {
+                // return (-1000, 1);
+            // }
+        // }
 
         (best_score, nodes)
     }
@@ -236,13 +246,13 @@ impl Pos {
             }
         }
 
-        let mut s = 0;
-        let mut n = 0;
+        let s = 0;
+        let n = 0;
 
         for &a in atks.iter() {
             println!("\nprev {}", self.history.last().unwrap());
             self.make_move(a);
-            let (capt, atks) = self.can_capture();
+            let (capt, _atks) = self.can_capture();
             if capt {
                 //s, n = self.quiescence(depth - 1, atks);
             } else {
@@ -259,10 +269,10 @@ impl Pos {
 
     fn can_capture(&self) -> (bool, Vec<Move>) {
 
-        let atks = movegenerator::generate_attack_moves(&self);
+        let atks = movegenerator::capturing_moves(&self);
         (!atks.is_empty(), atks)
 
-        // let (atk, moves) = movegenerator::generate_attack_map(&self);
+        // let (atk, moves) = movegenerator::all_moves_and_attack_map(&self);
         // println!("atk map\n{}", (atk & self.board.theirs(self.turn)));
         // let c = (atk & self.board.theirs(self.turn)).has_bits();
         // (c, moves)

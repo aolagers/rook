@@ -46,25 +46,10 @@ impl Pc {
 }
 
 impl fmt::Display for Pc {
-    /// Piece is printed as a [unicode chess
-    /// symbol](https://en.wikipedia.org/wiki/Chess_symbols_in_Unicode).
+    /// Piece is printed as a
+    /// [unicode chess symbol](https://en.wikipedia.org/wiki/Chess_symbols_in_Unicode).
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let c = match *self {
-            Pc(Black, Pawn) => '♙',
-            Pc(Black, Bishop) => '♗',
-            Pc(Black, Knight) => '♘',
-            Pc(Black, Rook) => '♖',
-            Pc(Black, Queen) => '♕',
-            Pc(Black, King) => '♔',
-            Pc(White, Pawn) => '♟',
-            Pc(White, Bishop) => '♝',
-            Pc(White, Knight) => '♞',
-            Pc(White, Rook) => '♜',
-            Pc(White, Queen) => '♛',
-            Pc(White, King) => '♚',
-        };
-
-        write!(f, "{} ", c)
+        write!(f, "{} ", "♟♞♝♜♛♚♙♘♗♖♕♔".chars().nth(self.as_index()).unwrap())
     }
 }
 

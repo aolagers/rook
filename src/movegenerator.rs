@@ -1,5 +1,3 @@
-
-
 use pos::Pos;
 use types::Move;
 use types::Pc;
@@ -7,18 +5,17 @@ use types::Color::*;
 use types::PieceType::*;
 use bitboard::BitBoard;
 
-pub fn generate_legal_moves(pos: &Pos) -> Vec<Move> {
+pub fn legal_moves(pos: &Pos) -> Vec<Move> {
     let mut p2 = pos.duplicate();
     let mut legalmoves = Vec::new();
 
-    let allmoves = generate_moves(pos);
+    let allmoves = all_moves(pos);
 
     for m in allmoves {
         p2.make_move(m);
-        let (atk, _) = generate_attack_map(&p2);
-        if (p2.board.pieces[pos.turn as usize + King as usize] & atk).has_bits() {
-            // CHECK
-        } else {
+        let (atk, _) = all_moves_and_attack_map(&p2);
+        if (p2.board.pieces[pos.turn as usize + King as usize] & atk).is_empty() {
+            // NO CHECK
             legalmoves.push(m.clone());
         }
 
@@ -28,7 +25,7 @@ pub fn generate_legal_moves(pos: &Pos) -> Vec<Move> {
     legalmoves
 }
 
-pub fn generate_moves(pos: &Pos) -> Vec<Move> {
+pub fn all_moves(pos: &Pos) -> Vec<Move> {
     let mut moves = Vec::new();
 
     pawn_moves(pos, &mut moves);
@@ -41,13 +38,14 @@ pub fn generate_moves(pos: &Pos) -> Vec<Move> {
     moves
 }
 
-pub fn generate_attack_moves(pos: &Pos) -> Vec<Move> {
-    let mut attacks = generate_moves(pos);
+pub fn capturing_moves(pos: &Pos) -> Vec<Move> {
+    let mut attacks = all_moves(pos);
     attacks.retain(|mv| mv.capture.is_some());
     attacks
+    // all_moves(pos).retain(|mv| mv.capture.is_some())
 }
 
-pub fn generate_attack_map(pos: &Pos) -> (BitBoard, Vec<Move>) {
+pub fn all_moves_and_attack_map(pos: &Pos) -> (BitBoard, Vec<Move>) {
     let mut moves = Vec::new();
     let mut atk = pawn_moves(pos, &mut moves);
     atk = atk | knight_moves(pos, &mut moves);

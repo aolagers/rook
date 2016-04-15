@@ -46,7 +46,7 @@ fn main() {
     // let mut game = Pos::from_fen("3r2k1/ppp2ppr/8/8/8/P4n1P/2P3q1/4K3 w KQkq - 0 1");
     // let mut game = Pos::from_fen("8/p7/8/8/8/8/7P/8 w KQkq - 0 1");
 
-    // for m in movegenerator::generate_legal_moves(&game) { println!("{}", m); }
+    // for m in movegenerator::legal_moves(&game) { println!("{}", m); }
 
     let human = false;
     let min_think = 0;
@@ -64,8 +64,8 @@ fn main() {
             println!("\nthinking... ");
 
             let depth = match game.turn {
-                Black => 4,
-                White => 4,
+                Black => 3,
+                White => 3
             };
 
             let start = PreciseTime::now();
@@ -97,7 +97,7 @@ fn main() {
             }
 
         } else {
-            let legals = movegenerator::generate_legal_moves(&game);
+            let legals = movegenerator::legal_moves(&game);
 
             // for l in legals.iter() { println!("{}", l); }
 
