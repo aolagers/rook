@@ -1,4 +1,5 @@
 target
 log.txt
 *.blend[12345]
-logo/logo-big.png
+logo-big.png
+*.pdf

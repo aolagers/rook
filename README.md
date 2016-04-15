@@ -1,9 +1,17 @@
+<img align="right" src="assets/logo.png" alt="Rook"/>
 
-![logo](logo/logo.png)
+# Rook
 
-# ROOK Chess
+A chess engine written in [Rust](https://www.rust-lang.org).
 
-## TODO
+## Features
+
+* Promotion
+* Basic [negamax](https://en.wikipedia.org/wiki/Negamax) search
+* Command-line client
+* UCI interface talking to UIs
+
+## Todo
 
 * Castling
 * Quinnessence search
@@ -12,8 +20,6 @@
 * Move ordering
 * Hashing
 
+### Screenshot
 
-## Done
-
-* Promotion
-* Only do legal moves
+![screenshot](assets/screenshot.png)
