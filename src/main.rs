@@ -8,7 +8,7 @@ use rook::types::Move;
 use rook::types::Color::*;
 
 extern crate time;
-use time::PreciseTime;
+use time::Instant;
 
 use std::io;
 use std::io::Write;
@@ -68,19 +68,19 @@ fn main() {
                 White => 3
             };
 
-            let start = PreciseTime::now();
+            let start = Instant::now();
             let (_, nodes, best_move) = game.negamax_start(depth);
-            let end = PreciseTime::now();
-            let dur = start.to(end);
-            totaltime += dur.num_milliseconds();
+            let end = Instant::now();
+            let dur = end - start;
+            totaltime += dur.whole_milliseconds();
             totalnodes += nodes;
-            let tl = min_think as i32 - dur.num_milliseconds() as i32;
+            let tl = min_think as i32 - dur.whole_milliseconds() as i32;
             if tl > 0 { std::thread::sleep(std::time::Duration::from_millis(tl as u64)); }
 
             println!("{:7} nodes in {:2.2} s {:3.2} knps",
                      nodes,
-                     dur.num_milliseconds() as f64 / 1000.0,
-                     nodes as f64 / dur.num_milliseconds() as f64);
+                     dur.whole_milliseconds() as f64 / 1000.0,
+                     nodes as f64 / dur.whole_milliseconds() as f64);
             println!("{:6.0} knodes in {:2.2} s {:3.2} knps",
                   totalnodes as f64 / 1000.0,
                   totaltime as f64 / 1000.0,
